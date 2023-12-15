@@ -16,6 +16,14 @@ import (
 	evector "github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+var (
+	trailColorScale = ebiten.ColorScale{}
+)
+
+func init() {
+	trailColorScale.ScaleAlpha(0.5)
+}
+
 type Game struct {
 	World  *ebiten.Image
 	Camera camera.Camera
@@ -46,8 +54,8 @@ func NewGame() *Game {
 	// test bodies
 	sun := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(0, 0)), body.WithMass(5000))
 
-	planet1 := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(0, -300)), body.WithVel(3.7, 0))
-	planet2 := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(-600, 0)), body.WithVel(0, 2.2))
+	planet1 := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(0, -300)), body.WithVel(3.7, 0), body.WithTrail(size))
+	planet2 := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(-600, 0)), body.WithVel(0, 2.2), body.WithTrail(size))
 	g.Bodies[0] = sun
 	g.Bodies[1] = planet1
 	g.Bodies[2] = planet2
@@ -115,6 +123,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	evector.StrokeLine(g.World, float32(size.X/2), 0, float32(size.X/2), float32(size.Y), 2, color.RGBA{255, 255, 255, 50}, false)
 	// bodies
 	for _, body := range g.Bodies {
+		if body.TrailLayer != nil {
+			g.World.DrawImage(body.TrailLayer, &ebiten.DrawImageOptions{ColorScale: trailColorScale})
+		}
 		body.Draw(g.World)
 	}
 

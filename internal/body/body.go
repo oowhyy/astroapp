@@ -1,7 +1,12 @@
 package body
 
 import (
+	"image"
+	"image/color"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	evector "github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/oowhyy/astroapp/pkg/extracolor"
 	"github.com/oowhyy/astroapp/pkg/vector"
 )
 
@@ -10,18 +15,23 @@ const (
 )
 
 type Body struct {
-	Pos vector.Vector
-	Vel vector.Vector
-	Acc vector.Vector
+	Pos     vector.Vector
+	PrevPos vector.Vector
+	Vel     vector.Vector
+	Acc     vector.Vector
 	// default - 1.0
 	Mass   float64
 	sprite *ebiten.Image
+
+	TrailLayer *ebiten.Image
+	trailColor color.Color
 }
 
 func NewBody(sprite *ebiten.Image, options ...BodyOptions) *Body {
 	body := &Body{
-		sprite: sprite,
-		Mass:   1,
+		sprite:     sprite,
+		Mass:       1,
+		trailColor: extracolor.RandomRGB(),
 	}
 	for _, op := range options {
 		op(body)
@@ -34,6 +44,12 @@ type BodyOptions func(b *Body)
 func WithMass(mass float64) BodyOptions {
 	return func(b *Body) {
 		b.Mass = mass
+	}
+}
+
+func WithTrail(worldSize image.Point) BodyOptions {
+	return func(b *Body) {
+		b.TrailLayer = ebiten.NewImage(int(worldSize.X), int(worldSize.Y))
 	}
 }
 
@@ -68,9 +84,15 @@ func WithVelVector(vel vector.Vector) BodyOptions {
 }
 
 func (b *Body) Update() {
+
+	b.PrevPos = b.Pos
 	b.Pos.Add(b.Vel)
 	b.Vel.Add(b.Acc)
 	b.Acc.Reset()
+	if b.TrailLayer != nil {
+		evector.StrokeLine(b.TrailLayer, float32(b.PrevPos.X), float32(b.PrevPos.Y), float32(b.Pos.X), float32(b.Pos.Y), 1, b.trailColor, true)
+	}
+
 }
 
 func (b *Body) ApplyForce(force vector.Vector) {
@@ -89,6 +111,7 @@ func (b *Body) Draw(screen *ebiten.Image) {
 	halfH := finalScale * float64(bounds.Y) / 2
 	op.GeoM.Scale(finalScale, finalScale)
 	op.GeoM.Translate(b.Pos.X-halfW, b.Pos.Y-halfH)
+
 	screen.DrawImage(b.sprite, op)
 }
 

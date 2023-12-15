@@ -15,8 +15,8 @@ var (
 )
 
 func main() {
-	// ebiten.SetWindowSize(WindowWidth, WindowHeight)
-	// ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	ebiten.SetWindowSize(WindowWidth, WindowHeight)
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Render an image")
 	g := game.NewGame()
 
