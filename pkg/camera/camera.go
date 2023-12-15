@@ -13,13 +13,13 @@ type Camera struct {
 	ViewPort   vector.Vector
 	Position   vector.Vector
 	MousePan   vector.Vector
-	ZoomFactor int
+	ZoomFactor float64
 	Rotation   int
 }
 
 func (c *Camera) String() string {
 	return fmt.Sprintf(
-		"Position: %.1f, Rotation: %d, Scale: %d",
+		"Position: %.1f, Rotation: %d, Scale: %f",
 		c.Position, c.Rotation, c.ZoomFactor,
 	)
 }
@@ -37,8 +37,8 @@ func (c *Camera) worldMatrix() ebiten.GeoM {
 	// We want to scale and rotate around center of image / screen
 	m.Translate(-c.viewportCenter().X, -c.viewportCenter().Y)
 	m.Scale(
-		math.Pow(1.01, float64(c.ZoomFactor)),
-		math.Pow(1.01, float64(c.ZoomFactor)),
+		c.ZoomFactor,
+		c.ZoomFactor,
 	)
 	m.Rotate(float64(c.Rotation) * 2 * math.Pi / 360)
 	m.Translate(c.viewportCenter().X, c.viewportCenter().Y)
@@ -52,6 +52,8 @@ func (c *Camera) Render(world, screen *ebiten.Image) {
 }
 
 func (c *Camera) Update() {
+	// pan
+
 	mousePos := vector.FromInt(ebiten.CursorPosition())
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		c.MousePan = mousePos
@@ -59,6 +61,15 @@ func (c *Camera) Update() {
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		c.Position.Sub(vector.Diff(mousePos, c.MousePan))
 		c.MousePan = mousePos
+	}
+
+	// zoom
+	_, dy := ebiten.Wheel()
+	if dy > 0 {
+		c.ZoomFactor *= 1.07
+	}
+	if dy < 0 {
+		c.ZoomFactor *= 0.93
 	}
 }
 

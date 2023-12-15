@@ -37,13 +37,31 @@ func WithMass(mass float64) BodyOptions {
 	}
 }
 
-func WithPos(pos vector.Vector) BodyOptions {
+func WithPosVector(pos vector.Vector) BodyOptions {
 	return func(b *Body) {
 		b.Pos = pos
 	}
 }
 
-func WithVel(vel vector.Vector) BodyOptions {
+func WithPos(x, y int) BodyOptions {
+	return func(b *Body) {
+		b.Pos = vector.Vector{
+			X: float64(x),
+			Y: float64(y),
+		}
+	}
+}
+
+func WithVel(dx, dy float64) BodyOptions {
+	return func(b *Body) {
+		b.Vel = vector.Vector{
+			X: dx,
+			Y: dy,
+		}
+	}
+}
+
+func WithVelVector(vel vector.Vector) BodyOptions {
 	return func(b *Body) {
 		b.Vel = vel
 	}
@@ -51,25 +69,40 @@ func WithVel(vel vector.Vector) BodyOptions {
 
 func (b *Body) Update() {
 	b.Pos.Add(b.Vel)
-	b.Pos.Add(b.Acc)
+	b.Vel.Add(b.Acc)
 	b.Acc.Reset()
 }
 
 func (b *Body) ApplyForce(force vector.Vector) {
-	b.Acc.Add(vector.Scaled(force, 1.0/b.Mass))
+	acc := vector.Scaled(force, 1.0/b.Mass)
+	// fmt.Println("BodyMass", b.Mass, "added acc")
+	b.Acc.Add(acc)
 }
 
 func (b *Body) Draw(screen *ebiten.Image) {
-	op := baseScale(b.sprite)
-	op.GeoM.Translate(b.Pos.X, b.Pos.Y)
-	op.GeoM.Scale(b.Mass, b.Mass)
+	op := &ebiten.DrawImageOptions{}
+	bounds := b.sprite.Bounds().Size()
+	minDimScale := BaseImgSize / float64(min(bounds.X, bounds.Y))
+	finalScale := minDimScale
+	// finalScale
+	halfW := finalScale * float64(bounds.X) / 2
+	halfH := finalScale * float64(bounds.Y) / 2
+	op.GeoM.Scale(finalScale, finalScale)
+	op.GeoM.Translate(b.Pos.X-halfW, b.Pos.Y-halfH)
 	screen.DrawImage(b.sprite, op)
 }
 
-func baseScale(img *ebiten.Image) *ebiten.DrawImageOptions {
-	bounds := img.Bounds().Size()
-	maxDimScale := BaseImgSize / float64(max(bounds.X, bounds.Y))
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(maxDimScale, maxDimScale)
-	return op
+func (b *Body) Overlap(b2 *Body) bool {
+	return b.DistTo(b2) < BaseImgSize*0.5
+}
+
+func (b *Body) DistTo(b2 *Body) float64 {
+	return vector.Diff(b.Pos, b2.Pos).Len()
+}
+
+func (b *Body) UnitDir(b2 *Body) vector.Vector {
+	diff := vector.Diff(b2.Pos, b.Pos)
+	mag := diff.Len()
+	diff.Scale(1 / mag)
+	return diff
 }

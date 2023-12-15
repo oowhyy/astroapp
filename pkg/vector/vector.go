@@ -1,5 +1,7 @@
 package vector
 
+import "math"
+
 type Vector struct {
 	X, Y float64
 }
@@ -17,7 +19,7 @@ func Diff(v1, v2 Vector) Vector {
 }
 
 func Scaled(v Vector, x float64) Vector {
-	return Vector{v.X / x, v.Y / x}
+	return Vector{v.X * x, v.Y * x}
 }
 
 func (v *Vector) Sub(v2 Vector) {
@@ -30,9 +32,13 @@ func (v *Vector) Add(v2 Vector) {
 	v.Y += v2.Y
 }
 
-func (v *Vector) Div(x float64) {
-	v.X /= x
-	v.Y /= x
+func (v *Vector) Scale(x float64) {
+	v.X *= x
+	v.Y *= x
+}
+
+func (v Vector) Len() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
 }
 
 func (v *Vector) Reset() {
