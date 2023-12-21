@@ -1,0 +1,52 @@
+# Distance scale
+# 149 597 870 700 metres = 1 AU = 1 distance unit = 1 * PixelsPerAU pixels
+#
+# Radius scale
+# 12 756 km = 1 Earth diameter = 1 diameter unit
+# x diameter units = BaseImageSize * log2(x + 1) pixels
+# 
+# Mass scale
+# 5.974 * 10^24 kg = 1 Earth Mass = 1 mass unit
+
+# start x and y are relative to parent body
+
+# velocity vector is added to parent's velocity vector
+
+background: "assets/blured_bg.png"
+
+gConstant: 0.044 ## ???
+
+bodies:
+  - name: "sun"
+    image: "assets/sun.png"
+    mass: 330000
+    diameter: 109
+    x: 0
+    y: 0
+  - name: "earth"
+    parent: "sun"
+    image: "assets/earth.png"
+    mass: 1
+    diameter: 1
+    x: 1
+    y: 0
+    dx: 0
+    dy: -0.046
+  - name: "mars"
+    parent: "sun"
+    image: "assets/mars.png"
+    mass: 0.107
+    diameter: 0.5326
+    x: 1.524
+    y: 0
+    dx: 0
+    dy: 0.03
+  - name: "jupiter"
+    parent: "sun"
+    image: "assets/jupiter.png"
+    mass: 318
+    diameter: 11.2
+    x: 5.203
+    y: 0
+    dx: 0
+    dy: 0.02
