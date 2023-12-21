@@ -54,7 +54,7 @@ func (c *Camera) Render(world, screen *ebiten.Image) {
 func (c *Camera) Update() {
 	// pan
 
-	mousePos := vector.FromInt(ebiten.CursorPosition())
+	mousePos := vector.FromInts(ebiten.CursorPosition())
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		c.MousePan = mousePos
 	}

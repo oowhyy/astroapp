@@ -12,6 +12,7 @@
 
 # velocity vector is added to parent's velocity vector
 
+
 background: "assets/blured_bg.png"
 
 gConstant: 0.044 ## ???

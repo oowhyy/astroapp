@@ -1,12 +1,19 @@
 package vector
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type Vector struct {
 	X, Y float64
 }
 
-func FromInt(x, y int) Vector {
+func FromFloats(x, y float64) Vector {
+	return Vector{x, y}
+}
+
+func FromInts(x, y int) Vector {
 	return Vector{float64(x), float64(y)}
 }
 
@@ -44,4 +51,8 @@ func (v Vector) Len() float64 {
 func (v *Vector) Reset() {
 	v.X = 0
 	v.Y = 0
+}
+
+func (v Vector) String() string {
+	return fmt.Sprintf("(%f, %f)", v.X, v.Y)
 }

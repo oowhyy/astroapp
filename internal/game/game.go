@@ -8,7 +8,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/oowhyy/astroapp/internal/assets"
 	"github.com/oowhyy/astroapp/internal/body"
 	"github.com/oowhyy/astroapp/pkg/camera"
 	"github.com/oowhyy/astroapp/pkg/vector"
@@ -28,43 +27,18 @@ type Game struct {
 	World  *ebiten.Image
 	Camera camera.Camera
 
+	background *ebiten.Image
+
 	Bodies map[int]*body.Body
+
+	GConstant float64
+
+	// parentMap map[string]string
 }
 
 func (g *Game) WorldSize() image.Point {
 	return g.World.Bounds().Size()
 }
-
-func NewGame() *Game {
-	g := &Game{}
-	g.Camera = camera.Camera{ZoomFactor: 0.5}
-	g.World = ebiten.NewImage(assets.BackgroundImage.Bounds().Dx(), assets.BackgroundImage.Bounds().Dy())
-	g.Bodies = make(map[int]*body.Body, 10)
-	// center camera
-	size := g.WorldSize()
-	screenW, screenH := ebiten.WindowSize()
-	if screenW != 0 {
-		g.Camera.Position.X = (float64(size.X) - float64(screenW)) / 2
-		g.Camera.Position.Y = (float64(size.Y) - float64(screenH)) / 2
-	} else {
-		g.Camera.Position.X = float64(size.X) / 4
-		g.Camera.Position.Y = float64(size.Y) / 4
-	}
-
-	// test bodies
-	sun := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(0, 0)), body.WithMass(5000))
-
-	planet1 := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(0, -300)), body.WithVel(3.7, 0), body.WithTrail(size))
-	planet2 := body.NewBody(assets.RedGemImage, body.WithPosVector(g.CenterRelative(-600, 0)), body.WithVel(0, 2.2), body.WithTrail(size))
-	g.Bodies[0] = sun
-	g.Bodies[1] = planet1
-	g.Bodies[2] = planet2
-	return g
-}
-
-const (
-	GConstant = 1.2
-)
 
 func DrawArrow(img *ebiten.Image, from, to vector.Vector) {
 	evector.StrokeLine(img, float32(from.X), float32(from.Y), float32(to.X), float32(to.Y), 5, color.White, true)
@@ -72,6 +46,13 @@ func DrawArrow(img *ebiten.Image, from, to vector.Vector) {
 }
 
 func DrawVector(img *ebiten.Image, baseX, baseY float64, vec vector.Vector) {
+	if vec.X > 1000 {
+		fmt.Println("too big", vec)
+		vec.X = 1000
+	}
+	if vec.Y > 1000 {
+		vec.Y = 1000
+	}
 	endY := float32(baseY + vec.Y)
 	endX := float32(baseX + vec.X)
 	evector.StrokeLine(img, float32(baseX), float32(baseY), endX, endY, 2, color.RGBA{255, 0, 0, 255}, true)
@@ -94,14 +75,17 @@ func (g *Game) Update() error {
 	// physics
 	for _, body := range g.Bodies {
 		for _, forceSource := range g.Bodies {
-			if body == forceSource || body.Overlap(forceSource) {
+			if body == forceSource {
+				continue
+			}
+			if body.Overlap(forceSource) {
+				fmt.Printf("%s overlapping %s\n", body, forceSource)
 				continue
 			}
 			distTo := body.DistTo(forceSource)
 			forceVec := body.UnitDir(forceSource)
-			forceMag := GConstant * body.Mass * forceSource.Mass / (distTo * distTo)
+			forceMag := g.GConstant * body.Mass * forceSource.Mass / (distTo * distTo)
 			forceVec.Scale(forceMag)
-			// DrawVector(g.World, body.Pos.X, body.Pos.Y, forceVec)
 			body.ApplyForce(forceVec)
 		}
 	}
@@ -115,10 +99,13 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.World.Clear()
-	g.World.DrawImage(assets.BackgroundImage, nil)
-
+	g.World.DrawImage(g.background, nil)
 	// axis
 	size := g.WorldSize()
+
+	halfW := float64(size.X / 2)
+	halfH := float64(size.Y / 2)
+
 	evector.StrokeLine(g.World, 0, float32(size.Y/2), float32(size.X), float32(size.Y/2), 2, color.RGBA{255, 255, 255, 50}, false)
 	evector.StrokeLine(g.World, float32(size.X/2), 0, float32(size.X/2), float32(size.Y), 2, color.RGBA{255, 255, 255, 50}, false)
 	// bodies
@@ -126,28 +113,28 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		if body.TrailLayer != nil {
 			g.World.DrawImage(body.TrailLayer, &ebiten.DrawImageOptions{ColorScale: trailColorScale})
 		}
-		body.Draw(g.World)
+		body.Draw(g.World, halfW, halfH)
 	}
 
 	// vec
 
-	for _, body := range g.Bodies {
-		for _, forceSource := range g.Bodies {
-			if body == forceSource || body.Overlap(forceSource) {
-				continue
-			}
-			distTo := body.DistTo(forceSource)
-			forceVec := body.UnitDir(forceSource)
-			forceMag := GConstant * body.Mass * forceSource.Mass / (distTo * distTo)
-			forceVec.Scale(forceMag)
-			forceVec.Scale(1000)
-			DrawVector(g.World, body.Pos.X, body.Pos.Y, forceVec)
-		}
-	}
+	// for _, body := range g.Bodies {
+	// 	for _, forceSource := range g.Bodies {
+	// 		if body == forceSource || body.Overlap(forceSource) {
+	// 			continue
+	// 		}
+	// 		distTo := body.DistTo(forceSource)
+	// 		forceVec := body.UnitDir(forceSource)
+	// 		forceMag := g.GConstant * body.Mass * forceSource.Mass / (distTo * distTo)
+	// 		forceVec.Scale(forceMag / body.Mass)
+	// 		forceVec.Scale(100)
+	// 		DrawVector(g.World, body.Pos.X+halfW, body.Pos.Y+halfH, forceVec)
+	// 	}
+	// }
 
 	g.Camera.Render(g.World, screen)
 	_, screenSizeY := ebiten.WindowSize()
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %d", ebiten.TPS()))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %f", ebiten.ActualTPS()))
 	ebitenutil.DebugPrintAt(
 		screen,
 
@@ -158,7 +145,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	g.Camera.ViewPort = vector.FromInt(outsideWidth, outsideHeight)
+	g.Camera.ViewPort = vector.FromInts(outsideWidth, outsideHeight)
 	return outsideWidth, outsideHeight
 }
 

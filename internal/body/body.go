@@ -1,90 +1,38 @@
 package body
 
 import (
-	"image"
+	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	evector "github.com/hajimehoshi/ebiten/v2/vector"
-	"github.com/oowhyy/astroapp/pkg/extracolor"
 	"github.com/oowhyy/astroapp/pkg/vector"
 )
 
+// ideally, pixel mappings should be general to the whole game and passed in body.Draw
+// current implementation saves unnecesary calculation
 const (
-	BaseImgSize = 100
+	PixelsPerAU = 200.0
+	BaseImgSize = 20.0
 )
 
 type Body struct {
+	Id      int
+	Name    string
 	Pos     vector.Vector
 	PrevPos vector.Vector
 	Vel     vector.Vector
 	Acc     vector.Vector
-	// default - 1.0
-	Mass   float64
-	sprite *ebiten.Image
+
+	Mass     float64
+	Diameter float64
+	image    *ebiten.Image
 
 	TrailLayer *ebiten.Image
 	trailColor color.Color
 }
 
-func NewBody(sprite *ebiten.Image, options ...BodyOptions) *Body {
-	body := &Body{
-		sprite:     sprite,
-		Mass:       1,
-		trailColor: extracolor.RandomRGB(),
-	}
-	for _, op := range options {
-		op(body)
-	}
-	return body
-}
-
-type BodyOptions func(b *Body)
-
-func WithMass(mass float64) BodyOptions {
-	return func(b *Body) {
-		b.Mass = mass
-	}
-}
-
-func WithTrail(worldSize image.Point) BodyOptions {
-	return func(b *Body) {
-		b.TrailLayer = ebiten.NewImage(int(worldSize.X), int(worldSize.Y))
-	}
-}
-
-func WithPosVector(pos vector.Vector) BodyOptions {
-	return func(b *Body) {
-		b.Pos = pos
-	}
-}
-
-func WithPos(x, y int) BodyOptions {
-	return func(b *Body) {
-		b.Pos = vector.Vector{
-			X: float64(x),
-			Y: float64(y),
-		}
-	}
-}
-
-func WithVel(dx, dy float64) BodyOptions {
-	return func(b *Body) {
-		b.Vel = vector.Vector{
-			X: dx,
-			Y: dy,
-		}
-	}
-}
-
-func WithVelVector(vel vector.Vector) BodyOptions {
-	return func(b *Body) {
-		b.Vel = vel
-	}
-}
-
 func (b *Body) Update() {
-
 	b.PrevPos = b.Pos
 	b.Pos.Add(b.Vel)
 	b.Vel.Add(b.Acc)
@@ -101,22 +49,23 @@ func (b *Body) ApplyForce(force vector.Vector) {
 	b.Acc.Add(acc)
 }
 
-func (b *Body) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	bounds := b.sprite.Bounds().Size()
+func (b *Body) Draw(screen *ebiten.Image, dx, dy float64) {
+	bounds := b.image.Bounds().Size()
 	minDimScale := BaseImgSize / float64(min(bounds.X, bounds.Y))
-	finalScale := minDimScale
-	// finalScale
+	finalScale := minDimScale * b.Diameter
 	halfW := finalScale * float64(bounds.X) / 2
 	halfH := finalScale * float64(bounds.Y) / 2
+	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(finalScale, finalScale)
-	op.GeoM.Translate(b.Pos.X-halfW, b.Pos.Y-halfH)
-
-	screen.DrawImage(b.sprite, op)
+	op.GeoM.Translate(b.Pos.X+dx-halfW, b.Pos.Y+dy-halfH)
+	screen.DrawImage(b.image, op)
+	// screen.DrawImage(b.image, &ebiten.DrawImageOptions{})
 }
 
 func (b *Body) Overlap(b2 *Body) bool {
-	return b.DistTo(b2) < BaseImgSize*0.5
+	d1 := b.Diameter * BaseImgSize
+	d2 := b2.Diameter * BaseImgSize
+	return b.DistTo(b2) < (d1+d2)*0.5
 }
 
 func (b *Body) DistTo(b2 *Body) float64 {
@@ -128,4 +77,8 @@ func (b *Body) UnitDir(b2 *Body) vector.Vector {
 	mag := diff.Len()
 	diff.Scale(1 / mag)
 	return diff
+}
+
+func (b Body) String() string {
+	return fmt.Sprintf("%s %s", b.Name, b.Pos)
 }
