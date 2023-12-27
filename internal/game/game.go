@@ -105,9 +105,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	halfW := float64(size.X / 2)
 	halfH := float64(size.Y / 2)
-
-	evector.StrokeLine(g.World, 0, float32(size.Y/2), float32(size.X), float32(size.Y/2), 2, color.RGBA{255, 255, 255, 50}, false)
-	evector.StrokeLine(g.World, float32(size.X/2), 0, float32(size.X/2), float32(size.Y), 2, color.RGBA{255, 255, 255, 50}, false)
 	// bodies
 	for _, body := range g.Bodies {
 		if body.TrailLayer != nil {

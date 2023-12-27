@@ -15,7 +15,7 @@
 
 background: "assets/blured_bg.png"
 
-gConstant: 0.044 ## ???
+gConstant: 0.004 ## ???
 
 bodies:
   - name: "sun"
@@ -24,6 +24,24 @@ bodies:
     diameter: 109
     x: 0
     y: 0
+  - name: "mercury"
+    parent: "sun"
+    image: "assets/mercury.png"
+    mass: 0.055
+    diameter: 0.37629
+    x: -0.387
+    y: 0
+    dx: 0
+    dy: -0.055
+  - name: "venus"
+    parent: "sun"
+    image: "assets/venus.png"
+    mass: 0.815
+    diameter: 0.948887
+    x: 0
+    y: 0.723
+    dx: -0.0369
+    dy: 0
   - name: "earth"
     parent: "sun"
     image: "assets/earth.png"
@@ -32,7 +50,7 @@ bodies:
     x: 1
     y: 0
     dx: 0
-    dy: -0.046
+    dy: -0.0411
   - name: "mars"
     parent: "sun"
     image: "assets/mars.png"
@@ -41,7 +59,7 @@ bodies:
     x: 1.524
     y: 0
     dx: 0
-    dy: 0.03
+    dy: 0.029
   - name: "jupiter"
     parent: "sun"
     image: "assets/jupiter.png"
@@ -50,4 +68,32 @@ bodies:
     x: 5.203
     y: 0
     dx: 0
-    dy: 0.02
+    dy: 0.018
+  - name: "saturn"
+    parent: "sun"
+    image: "assets/saturn.png"
+    mass: 95.2
+    diameter: 9.449357
+    x: 9.537
+    y: 0
+    dx: 0
+    dy: 0.01
+  - name: "uranus"
+    parent: "sun"
+    image: "assets/uranus.png"
+    mass: 14.50
+    diameter: 4.007
+    x: 19.191
+    y: 0
+    dx: 0
+    dy: 0.009
+  - name: "neptune"
+    parent: "sun"
+    image: "assets/neptune.png"
+    mass: 17.4
+    diameter: 3.8827
+    x: 30.069
+    y: 0
+    dx: 0
+    dy: 0.005
+

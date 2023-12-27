@@ -12,8 +12,9 @@ import (
 // ideally, pixel mappings should be general to the whole game and passed in body.Draw
 // current implementation saves unnecesary calculation
 const (
-	PixelsPerAU = 200.0
+	PixelsPerAU = 100.0
 	BaseImgSize = 20.0
+	OverlapMult = 0.2
 )
 
 type Body struct {
@@ -63,8 +64,8 @@ func (b *Body) Draw(screen *ebiten.Image, dx, dy float64) {
 }
 
 func (b *Body) Overlap(b2 *Body) bool {
-	d1 := b.Diameter * BaseImgSize
-	d2 := b2.Diameter * BaseImgSize
+	d1 := b.Diameter * BaseImgSize * OverlapMult
+	d2 := b2.Diameter * BaseImgSize * OverlapMult
 	return b.DistTo(b2) < (d1+d2)*0.5
 }
 
