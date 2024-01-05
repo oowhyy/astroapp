@@ -12,6 +12,7 @@
 
 # velocity vector is added to parent's velocity vector
 
+rock: "assets/rock.png"
 
 background: "assets/background.png"
 
