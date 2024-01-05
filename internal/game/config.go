@@ -8,12 +8,14 @@ import (
 	"github.com/oowhyy/astroapp/internal/body"
 	"github.com/oowhyy/astroapp/pkg/camera"
 	"github.com/oowhyy/astroapp/pkg/common"
+	"github.com/oowhyy/astroapp/pkg/webui"
 )
 
 type Config struct {
-	IsWasm     bool
 	Background string             `yaml:"background"`
+	Rock       string             `yaml:"rock"`
 	Bodies     []*body.BodyConfig `yaml:"bodies"`
+	Arrow      string             `yaml:"arrow"`
 	GConstant  float64            `yaml:"gConstant"`
 }
 
@@ -21,23 +23,29 @@ func FromConfig(c *Config) *Game {
 	g := &Game{
 		// parentMap: make(map[string]string, len(c.Bodies)),
 	}
+	g.UI = webui.NewWebInterface()
 	g.GConstant = c.GConstant
 	g.Camera = camera.Camera{ZoomFactor: 0.5}
-	bgImg, err := common.ImageFromPath(c.Background, c.IsWasm)
+	bgImg, err := common.ImageFromPath(c.Background)
 	if err != nil {
 		log.Fatalf("background image not found at %s", c.Background)
 	}
+	fmt.Println(c.Arrow)
+	arrow, err := common.ImageFromPath(c.Arrow)
+	if err != nil {
+		log.Fatalf("background image not found at %s", c.Background)
+	}
+
+	g.rockPath = c.Rock
 	g.background = bgImg
-	g.World = ebiten.NewImage(bgImg.Bounds().Dx(), bgImg.Bounds().Dy())
+	g.blueArrow = arrow
+	g.World = ebiten.NewImage(8000, 5000)
 	g.Bodies = make(map[int]*body.Body, 10)
 	// center camera
 	size := g.WorldSize()
-	screenW, screenH := ebiten.WindowSize()
-	if screenW != 0 {
-		g.Camera.Position.X = (float64(size.X) - float64(screenW)) / 2
-		g.Camera.Position.Y = (float64(size.Y) - float64(screenH)) / 2
-	}
-	// else not on desktop - no data about user window size
+	screenW, screenH := g.UI.WindowSize()
+	g.Camera.Position.X = (float64(size.X) - float64(screenW)) / 2
+	g.Camera.Position.Y = (float64(size.Y) - float64(screenH)) / 2
 
 	// bodies
 
@@ -59,13 +67,12 @@ func FromConfig(c *Config) *Game {
 
 	bodiesMap := make(map[int]*body.Body, len(c.Bodies))
 	for _, conf := range c.Bodies {
-		body, err := body.FromConfig(conf, c.IsWasm)
+		body, err := body.FromConfig(conf)
 		if err != nil {
 			log.Fatalf("failed to load body from config: %s", err)
 		}
 		bodiesMap[body.Id] = body
 	}
 	g.Bodies = bodiesMap
-	fmt.Println(g.Bodies)
 	return g
 }

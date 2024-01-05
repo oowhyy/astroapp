@@ -29,6 +29,8 @@ type Body struct {
 	Diameter float64
 	image    *ebiten.Image
 
+	Frozen bool
+
 	TrailLayer *ebiten.Image
 	trailColor color.Color
 }

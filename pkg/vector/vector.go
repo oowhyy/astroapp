@@ -9,6 +9,7 @@ type Vector struct {
 	X, Y float64
 }
 
+
 func FromFloats(x, y float64) Vector {
 	return Vector{x, y}
 }
@@ -53,6 +54,22 @@ func (v *Vector) Reset() {
 	v.Y = 0
 }
 
+func (v *Vector) Angle() float64 {
+	return math.Atan(v.Y/v.X)
+}
+
 func (v Vector) String() string {
 	return fmt.Sprintf("(%f, %f)", v.X, v.Y)
+}
+
+func (v *Vector) Limit(minVal, maxVal float64) {
+	v.X = max(v.X, minVal)
+	v.X = min(v.X, maxVal)
+
+	v.Y = max(v.Y, minVal)
+	v.Y = min(v.Y, maxVal)
+}
+
+func (v *Vector) Clone() *Vector {
+	return &Vector{v.X, v.Y}
 }

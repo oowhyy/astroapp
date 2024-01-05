@@ -20,7 +20,10 @@ type BodyConfig struct {
 	Dy       float64 `yaml:"dy"`
 }
 
-func FromConfig(c *BodyConfig, isWasm bool) (*Body, error) {
+func FromConfig(c *BodyConfig) (*Body, error) {
+	if len(c.Image) == 0 {
+		panic("no image provided")
+	}
 	b := &Body{
 		Id:   c.Id,
 		Name: c.Name,
@@ -36,10 +39,14 @@ func FromConfig(c *BodyConfig, isWasm bool) (*Body, error) {
 	dia := math.Log2(c.Diameter + 1)
 	b.Diameter = dia
 
-	image, err := common.ImageFromPath(c.Image, isWasm)
+	image, err := common.ImageFromPath(c.Image)
 	if err != nil {
 		return nil, err
 	}
 	b.image = image
 	return b, nil
 }
+
+// func NewBody(img *ebiten.Image, name string) Body {
+// 	return
+// }

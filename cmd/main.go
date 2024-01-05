@@ -21,7 +21,7 @@ var (
 var RunInBrowser = false
 
 func main() {
-	ebiten.SetWindowSize(WindowWidth, WindowHeight)
+	// ebiten.SetWindowSize(WindowWidth, WindowHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Render an image")
 	cfg := &game.Config{}
@@ -29,7 +29,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	g := game.FromConfig(cfg)
 
 	if err := ebiten.RunGame(g); err != nil {
@@ -41,7 +40,6 @@ func readConfig(path string, cfg *game.Config) error {
 	pid := os.Getpid()
 	// wasm
 	if pid == -1 {
-		cfg.IsWasm = true
 		resp, err := http.Get("https://raw.githubusercontent.com/oowhyy/astroapp/main/" + path)
 		if err != nil {
 			log.Fatal(err)
@@ -51,7 +49,6 @@ func readConfig(path string, cfg *game.Config) error {
 		if err != nil {
 			log.Fatal(err)
 		}
-		cfg.IsWasm = true
 		return nil
 	}
 	// desktop
