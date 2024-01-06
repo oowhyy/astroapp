@@ -14,22 +14,22 @@
 
 repoURL: "http://mariallsmi.temp.swtest.ru/astroapp"
 
-rock: "http://mariallsmi.temp.swtest.ru/astroapp/assets/rock.png"
-arrow: "http://mariallsmi.temp.swtest.ru/astroapp/assets/blue_arrow.png"
-background: "http://mariallsmi.temp.swtest.ru/astroapp/assets/background.png"
+rock: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/rock.png"
+arrow: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/blue_arrow.png"
+background: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/background.png"
 
 gConstant: 0.004 ## ???
 
 bodies:
   - name: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/sun.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/sun.png"
     mass: 330000
     diameter: 109
     x: 0
     y: 0
   - name: "mercury"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/mercury.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/mercury.png"
     mass: 0.055
     diameter: 0.37629
     x: -0.387
@@ -38,7 +38,7 @@ bodies:
     dy: -0.055
   - name: "venus"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/venus.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/venus.png"
     mass: 0.815
     diameter: 0.948887
     x: 0
@@ -47,7 +47,7 @@ bodies:
     dy: 0
   - name: "earth"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/earth.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/earth.png"
     mass: 1
     diameter: 1
     x: 1
@@ -56,7 +56,7 @@ bodies:
     dy: -0.0411
   - name: "mars"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/mars.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/mars.png"
     mass: 0.107
     diameter: 0.5326
     x: 1.524
@@ -65,7 +65,7 @@ bodies:
     dy: 0.029
   - name: "jupiter"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/jupiter.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/jupiter.png"
     mass: 318
     diameter: 11.2
     x: 5.203
@@ -74,7 +74,7 @@ bodies:
     dy: 0.018
   - name: "saturn"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/saturn.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/saturn.png"
     mass: 95.2
     diameter: 9.449357
     x: 9.537
@@ -83,7 +83,7 @@ bodies:
     dy: 0.01
   - name: "uranus"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/uranus.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/uranus.png"
     mass: 14.50
     diameter: 4.007
     x: 19.191
@@ -92,7 +92,7 @@ bodies:
     dy: 0.009
   - name: "neptune"
     parent: "sun"
-    image: "http://mariallsmi.temp.swtest.ru/astroapp/assets/neptune.png"
+    image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/neptune.png"
     mass: 17.4
     diameter: 3.8827
     x: 30.069
