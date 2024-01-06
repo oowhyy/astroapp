@@ -12,8 +12,6 @@
 
 # velocity vector is added to parent's velocity vector
 
-repoURL: "http://mariallsmi.temp.swtest.ru/astroapp"
-
 rock: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/rock.png"
 arrow: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/blue_arrow.png"
 background: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/background.png"

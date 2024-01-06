@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	configReroURI = "http://mariallsmi.temp.swtest.ru/astroapp/config.yaml"
+	configReroURI = "https://raw.githubusercontent.com/oowhyy/astroapp/main/astroapp/config.yaml"
 )
 
 func main() {
