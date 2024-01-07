@@ -30,19 +30,19 @@ bodies:
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/mercury.png"
     mass: 0.055
     diameter: 0.37629
-    x: -0.387
+    x: 0.387
     y: 0
     dx: 0
-    dy: -0.055
+    dy: 0.019748
   - name: "venus"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/venus.png"
     mass: 0.815
     diameter: 0.948887
-    x: 0
-    y: 0.723
-    dx: -0.0369
-    dy: 0
+    x: 0.723
+    y: 0
+    dx: 0
+    dy: 0.014981
   - name: "earth"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/earth.png"
@@ -51,7 +51,7 @@ bodies:
     x: 1
     y: 0
     dx: 0
-    dy: -0.0411
+    dy: 0.012828
   - name: "mars"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/mars.png"
@@ -60,7 +60,7 @@ bodies:
     x: 1.524
     y: 0
     dx: 0
-    dy: 0.029
+    dy: 0.010407
   - name: "jupiter"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/jupiter.png"
@@ -69,7 +69,7 @@ bodies:
     x: 5.203
     y: 0
     dx: 0
-    dy: 0.018
+    dy: 0.010407
   - name: "saturn"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/saturn.png"
@@ -78,7 +78,7 @@ bodies:
     x: 9.537
     y: 0
     dx: 0
-    dy: 0.01
+    dy: 0.010407
   - name: "uranus"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/uranus.png"
@@ -87,7 +87,7 @@ bodies:
     x: 19.191
     y: 0
     dx: 0
-    dy: 0.009
+    dy: 0.010407
   - name: "neptune"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/neptune.png"
@@ -96,5 +96,5 @@ bodies:
     x: 30.069
     y: 0
     dx: 0
-    dy: 0.005
+    dy: 0.003787
 
