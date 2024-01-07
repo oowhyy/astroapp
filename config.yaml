@@ -69,7 +69,7 @@ bodies:
     x: 5.203
     y: 0
     dx: 0
-    dy: 0.010407
+    dy: 0.005665
   - name: "saturn"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/saturn.png"
@@ -78,7 +78,7 @@ bodies:
     x: 9.537
     y: 0
     dx: 0
-    dy: 0.010407
+    dy: 0.004248
   - name: "uranus"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/uranus.png"
@@ -87,7 +87,7 @@ bodies:
     x: 19.191
     y: 0
     dx: 0
-    dy: 0.010407
+    dy: 0.003129
   - name: "neptune"
     parent: "sun"
     image: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/neptune.png"
