@@ -3,7 +3,7 @@ package game
 import (
 	"bytes"
 	"fmt"
-	"image"
+	"image/color"
 	"log"
 
 	_ "embed"
@@ -20,13 +20,16 @@ import (
 )
 
 var (
-	trailColorScale = ebiten.ColorScale{}
+	trailOps        *ebiten.DrawImageOptions
 	mplusFaceSource *text.GoTextFaceSource
 	mplusNormalFace *text.GoTextFace
 )
 
 func init() {
-	trailColorScale.ScaleAlpha(0.5)
+	clrSc := ebiten.ColorScale{}
+	// clrSc.ScaleAlpha(0.5)
+	trailOps = &ebiten.DrawImageOptions{ColorScale: clrSc}
+	trailOps.GeoM.Scale(1, 1)
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 	if err != nil {
 		log.Fatal(err)
@@ -52,6 +55,8 @@ type Game struct {
 	UI         webui.UserInterface
 	background *ebiten.Image
 
+	trailLayer *ebiten.Image
+
 	// for adding new body
 	addStage  AddStage
 	rockPath  string
@@ -64,12 +69,14 @@ type Game struct {
 	// parentMap map[string]string
 }
 
-func (g *Game) WorldSize() image.Point {
-	return g.World.Bounds().Size()
+func (g *Game) WorldSize() (float64, float64) {
+	p := g.World.Bounds().Size()
+	return float64(p.X), float64(p.Y)
 }
 
 func (g *Game) Update() error {
 	addMode := g.UI.IsAddMode()
+	w, h := g.WorldSize()
 	if addMode {
 		//add mode
 		switch g.addStage {
@@ -99,19 +106,15 @@ func (g *Game) Update() error {
 				g.addStage = AddStageDraw
 			}
 			mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
-			size := g.WorldSize()
-			halfW := float64(size.X / 2)
-			halfH := float64(size.Y / 2)
 			newb := g.Bodies[g.newId]
-			newb.Pos.X = mx - halfW
-			newb.Pos.Y = my - halfH
+			newb.Pos.X, newb.Pos.Y = body.ToLocal(mx, my, w, h)
 		case AddStageDraw:
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 				g.addStage = AddStageDraw
 				g.addStage = AddStage("")
 				mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
 				mouseVec := vector.FromFloats(mx, my)
-				rockVec := g.PlanetToWorld(g.Bodies[g.newId].Pos)
+				rockVec := g.Bodies[g.newId].WorldCoords(w, h)
 				velRaw := vector.Diff(rockVec, mouseVec)
 				scaled := vector.Scaled(velRaw, 1.0/200.0)
 				newb := g.Bodies[g.newId]
@@ -162,36 +165,36 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.World.Clear()
+	g.World.Fill(color.RGBA{50, 50, 50, 255})
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(10, 10)
+	worldW, worldH := g.WorldSize()
+	bounds := g.background.Bounds()
+	op.GeoM.Scale(worldW/float64(bounds.Dx()), worldH/float64(bounds.Dy()))
 	g.World.DrawImage(g.background, op)
 
 	if g.addStage == AddStageDraw {
 		mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
 		mouseVec := vector.FromFloats(mx, my)
-		rockVec := g.PlanetToWorld(g.Bodies[g.newId].Pos)
+		rockVec := g.Bodies[g.newId].WorldCoords(worldW, worldH)
 		velRaw := vector.Diff(rockVec, mouseVec)
 		g.DrawPlanetVector(g.World, rockVec, velRaw)
-		toDraw := vector.Scaled(velRaw, 1.0/200.0)
+		toDraw := vector.Scaled(velRaw, 1.0/500.0)
 		txt := toDraw.String()
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(rockVec.X+50, rockVec.Y+50)
 		text.Draw(g.World, txt, mplusNormalFace, op)
 
 	}
-
-	size := g.WorldSize()
-	halfW := float64(size.X / 2)
-	halfH := float64(size.Y / 2)
 	// bodies
 	for _, body := range g.Bodies {
-		if body.TrailLayer != nil {
-			g.World.DrawImage(body.TrailLayer, &ebiten.DrawImageOptions{ColorScale: trailColorScale})
-		}
-		body.Draw(g.World, halfW, halfH)
+		// if body.TrailLayer != nil {
+		// 	g.World.DrawImage(body.TrailLayer, trailOps)
+		// }
+		body.Draw(g.World, g.trailLayer)
 	}
-
+	g.World.DrawImage(g.trailLayer, &ebiten.DrawImageOptions{})
 	g.Camera.Render(g.World, screen)
+	// g.Camera.Render(g.trailLayer, screen)
 
 	txt := fmt.Sprintf("TPS: %f FPS: %f\n%s", ebiten.ActualTPS(), ebiten.ActualFPS(), g.Camera.String())
 	ebitenutil.DebugPrintAt(screen, txt, 100, 0)
@@ -204,11 +207,11 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func (g *Game) CenterToWorld(x, y float64) vector.Vector {
-	size := g.WorldSize()
-	return vector.Vector{X: float64(size.X)/2 + x, Y: float64(size.Y)/2 + y}
+	w, h := g.WorldSize()
+	return vector.Vector{X: w/2 + x, Y: h/2 + y}
 }
 
 func (g *Game) PlanetToWorld(pos vector.Vector) vector.Vector {
-	size := g.WorldSize()
-	return vector.Vector{X: float64(size.X)/2 + pos.X, Y: float64(size.Y)/2 + pos.Y}
+	w, h := g.WorldSize()
+	return vector.Vector{X: w/2 + pos.X, Y: h/2 + pos.Y}
 }

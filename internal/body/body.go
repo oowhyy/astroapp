@@ -9,12 +9,11 @@ import (
 	"github.com/oowhyy/astroapp/pkg/vector"
 )
 
-// ideally, pixel mappings should be general to the whole game and passed in body.Draw
-// current implementation saves unnecesary calculation
 const (
-	PixelsPerAU = 100.0
-	BaseImgSize = 20.0
-	OverlapMult = 0.2
+	DistScale    = 200.0 // affects physics
+	ToScreenMult = 0.33
+	BaseImgSize  = 20.0
+	OverlapMult  = 0.2
 )
 
 type Body struct {
@@ -29,20 +28,16 @@ type Body struct {
 	Diameter float64
 	image    *ebiten.Image
 
-	Frozen bool
-
-	TrailLayer *ebiten.Image
+	Frozen     bool
 	trailColor color.Color
 }
 
 func (b *Body) Update() {
+	b.Vel.Scale(0.99996) // friction in space xdd
 	b.PrevPos = b.Pos
 	b.Pos.Add(b.Vel)
 	b.Vel.Add(b.Acc)
 	b.Acc.Reset()
-	if b.TrailLayer != nil {
-		evector.StrokeLine(b.TrailLayer, float32(b.PrevPos.X), float32(b.PrevPos.Y), float32(b.Pos.X), float32(b.Pos.Y), 1, b.trailColor, true)
-	}
 
 }
 
@@ -52,7 +47,7 @@ func (b *Body) ApplyForce(force vector.Vector) {
 	b.Acc.Add(acc)
 }
 
-func (b *Body) Draw(screen *ebiten.Image, dx, dy float64) {
+func (b *Body) Draw(screen *ebiten.Image, trailLayer *ebiten.Image) {
 	bounds := b.image.Bounds().Size()
 	minDimScale := BaseImgSize / float64(min(bounds.X, bounds.Y))
 	finalScale := minDimScale * b.Diameter
@@ -60,9 +55,30 @@ func (b *Body) Draw(screen *ebiten.Image, dx, dy float64) {
 	halfH := finalScale * float64(bounds.Y) / 2
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(finalScale, finalScale)
-	op.GeoM.Translate(b.Pos.X+dx-halfW, b.Pos.Y+dy-halfH)
+
+	screenSize := screen.Bounds()
+	screenDx := float64(screenSize.Dx())
+	screenDy := float64(screenSize.Dy())
+	worldCoord := b.WorldCoords(screenDx, screenDy)
+	screenX := worldCoord.X
+	screenY := worldCoord.Y
+
+	if trailLayer != nil {
+		worldPrevX, worldPrevY := b.PrevPos.X*ToScreenMult+screenDx/2.0, b.PrevPos.Y*ToScreenMult+screenDy/2.0
+		evector.StrokeLine(trailLayer, float32(worldPrevX), float32(worldPrevY), float32(screenX), float32(screenY), 1, b.trailColor, true)
+	}
+
+	op.GeoM.Translate(screenX-halfW, screenY-halfH)
 	screen.DrawImage(b.image, op)
 	// screen.DrawImage(b.image, &ebiten.DrawImageOptions{})
+}
+
+func (b *Body) WorldCoords(worldX, worldY float64) vector.Vector {
+	return vector.FromFloats(b.Pos.X*ToScreenMult+worldX/2.0, b.Pos.Y*ToScreenMult+worldY/2.0)
+}
+
+func ToLocal(wordlX, wordlY, wW, wH float64) (float64, float64) {
+	return (wordlX - wW/2.0) / ToScreenMult, (wordlY - wH/2.0) / ToScreenMult
 }
 
 func (b *Body) Overlap(b2 *Body) bool {

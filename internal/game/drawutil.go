@@ -21,7 +21,7 @@ func (g *Game) DrawLine(img *ebiten.Image, from, to vector.Vector) {
 	diff := vector.Diff(to, from)
 	op := &ebiten.DrawImageOptions{}
 	len := diff.Len()
-	width := 100.0
+	width := 30.0
 	arrowBounds := g.blueArrow.Bounds()
 	op.GeoM.Scale(len/float64(arrowBounds.Dx()), width/float64(arrowBounds.Dy()))
 	angle := math.Atan2(diff.Y, diff.X)

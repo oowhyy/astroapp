@@ -59,7 +59,9 @@ func (c *Camera) Update() {
 		c.MousePan = mousePos
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		c.Position.Sub(vector.Diff(mousePos, c.MousePan))
+		diff := vector.Diff(mousePos, c.MousePan)
+		diff.Scale(1/c.ZoomFactor)
+		c.Position.Sub(diff)
 		c.MousePan = mousePos
 	}
 

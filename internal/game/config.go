@@ -19,13 +19,18 @@ type Config struct {
 	GConstant  float64            `yaml:"gConstant"`
 }
 
+const (
+	WorldWidth  = 4000
+	WorldHeight = 4000
+)
+
 func FromConfig(c *Config) *Game {
 	g := &Game{
 		// parentMap: make(map[string]string, len(c.Bodies)),
 	}
 	g.UI = webui.NewWebInterface()
 	g.GConstant = c.GConstant
-	g.Camera = camera.Camera{ZoomFactor: 0.5}
+	g.Camera = camera.Camera{ZoomFactor: 1}
 	bgImg, err := common.ImageFromPath(c.Background)
 	if err != nil {
 		log.Fatalf("background image not found at %s", c.Background)
@@ -39,13 +44,14 @@ func FromConfig(c *Config) *Game {
 	g.rockPath = c.Rock
 	g.background = bgImg
 	g.blueArrow = arrow
-	g.World = ebiten.NewImage(8000, 5000)
+	g.World = ebiten.NewImage(WorldWidth, WorldHeight)
+	g.trailLayer = ebiten.NewImage(WorldWidth, WorldHeight)
 	g.Bodies = make(map[int]*body.Body, 10)
 	// center camera
-	size := g.WorldSize()
+	w,h := g.WorldSize()
 	screenW, screenH := g.UI.WindowSize()
-	g.Camera.Position.X = (float64(size.X) - float64(screenW)) / 2
-	g.Camera.Position.Y = (float64(size.Y) - float64(screenH)) / 2
+	g.Camera.Position.X = (w - float64(screenW)) / 2
+	g.Camera.Position.Y = (h - float64(screenH)) / 2
 
 	// bodies
 

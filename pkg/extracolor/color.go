@@ -6,11 +6,9 @@ import (
 )
 
 func RandomRGB() color.Color {
-	r := uint8(rand.Intn(2))
-	g := uint8(rand.Intn(2))
-	b := uint8(rand.Intn(2))
-	if r+g+b == 0 {
-		return color.RGBA{255, 255, 255, 255}
-	}
-	return color.RGBA{255 * r, 255 * g, 255 * b, 255}
+	bits := 8
+	r := uint8(256 / bits * (rand.Intn(bits) + 1))
+	g := uint8(256 / bits * (rand.Intn(bits) + 1))
+	b := uint8(256 / bits * (rand.Intn(bits) + 1))
+	return color.RGBA{r, g, b, 255}
 }

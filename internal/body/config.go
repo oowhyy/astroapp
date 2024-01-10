@@ -1,9 +1,11 @@
 package body
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/oowhyy/astroapp/pkg/common"
+	"github.com/oowhyy/astroapp/pkg/extracolor"
 	"github.com/oowhyy/astroapp/pkg/vector"
 )
 
@@ -29,14 +31,16 @@ func FromConfig(c *BodyConfig) (*Body, error) {
 		Name: c.Name,
 		Mass: c.Mass,
 	}
-	x := c.X * PixelsPerAU
-	y := c.Y * PixelsPerAU
-	dx := c.Dx * PixelsPerAU
-	dy := c.Dy * PixelsPerAU
+	// startAngle := rand.Float64() * math.Pi * 2
+	x := c.X * DistScale
+	y := c.Y * DistScale
+	dx := c.Dx * DistScale
+	dy := c.Dy * DistScale
+
 	b.Pos = vector.FromFloats(x, y)
 	b.Vel = vector.FromFloats(dx, dy)
 
-	dia := math.Log2(c.Diameter + 1)
+	dia := math.Log2(c.Diameter + 1) /3
 	b.Diameter = dia
 
 	image, err := common.ImageFromPath(c.Image)
@@ -44,6 +48,8 @@ func FromConfig(c *BodyConfig) (*Body, error) {
 		return nil, err
 	}
 	b.image = image
+	b.trailColor = extracolor.RandomRGB()
+	fmt.Println(c.Name, dy, c.Dy)
 	return b, nil
 }
 
