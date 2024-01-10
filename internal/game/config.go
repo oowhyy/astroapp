@@ -29,7 +29,9 @@ func FromConfig(c *Config) *Game {
 		// parentMap: make(map[string]string, len(c.Bodies)),
 	}
 	g.UI = webui.NewWebInterface()
+
 	g.GConstant = c.GConstant
+	g.simSpeed = 1
 	g.Camera = camera.Camera{ZoomFactor: 1}
 	bgImg, err := common.ImageFromPath(c.Background)
 	if err != nil {
@@ -48,10 +50,29 @@ func FromConfig(c *Config) *Game {
 	g.trailLayer = ebiten.NewImage(WorldWidth, WorldHeight)
 	g.Bodies = make(map[int]*body.Body, 10)
 	// center camera
-	w,h := g.WorldSize()
+	w, h := g.WorldSize()
 	screenW, screenH := g.UI.WindowSize()
 	g.Camera.Position.X = (w - float64(screenW)) / 2
 	g.Camera.Position.Y = (h - float64(screenH)) / 2
+
+	// setup ui callbacks
+	g.UI.OnClearTrail(func() {
+		g.trailLayer.Clear()
+	})
+	g.UI.OnSpeedUp(func() int {
+		if g.simSpeed >= 9 {
+			return g.simSpeed
+		}
+		g.simSpeed++
+		return g.simSpeed
+	})
+	g.UI.OnSlowDown(func() int {
+		if g.simSpeed <= 1 {
+			return g.simSpeed
+		}
+		g.simSpeed--
+		return g.simSpeed
+	})
 
 	// bodies
 

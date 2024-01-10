@@ -67,6 +67,7 @@ type Game struct {
 	GConstant float64
 
 	// parentMap map[string]string
+	simSpeed int
 }
 
 func (g *Game) WorldSize() (float64, float64) {
@@ -136,28 +137,30 @@ func (g *Game) Update() error {
 	}
 
 	// physics
-	for _, body := range g.Bodies {
-		if body.Frozen {
-			continue
-		}
-		for _, forceSource := range g.Bodies {
-			if body == forceSource || body.Frozen {
+	for ii := 0; ii < g.simSpeed; ii++ {
+		for _, body := range g.Bodies {
+			if body.Frozen {
 				continue
 			}
-			if body.Overlap(forceSource) {
-				fmt.Printf("%s overlapping %s\n", body, forceSource)
-				continue
+			for _, forceSource := range g.Bodies {
+				if body == forceSource || body.Frozen {
+					continue
+				}
+				if body.Overlap(forceSource) {
+					fmt.Printf("%s overlapping %s\n", body, forceSource)
+					continue
+				}
+				distTo := body.DistTo(forceSource)
+				forceVec := body.UnitDir(forceSource)
+				forceMag := g.GConstant * body.Mass * forceSource.Mass / (distTo * distTo)
+				forceVec.Scale(forceMag)
+				body.ApplyForce(forceVec)
 			}
-			distTo := body.DistTo(forceSource)
-			forceVec := body.UnitDir(forceSource)
-			forceMag := g.GConstant * body.Mass * forceSource.Mass / (distTo * distTo)
-			forceVec.Scale(forceMag)
-			body.ApplyForce(forceVec)
 		}
-	}
-
-	for _, body := range g.Bodies {
-		body.Update()
+		for _, body := range g.Bodies {
+			body.Update()
+			body.DrawTrail(g.World, g.trailLayer)
+		}
 	}
 
 	return nil
@@ -196,7 +199,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.Camera.Render(g.World, screen)
 	// g.Camera.Render(g.trailLayer, screen)
 
-	txt := fmt.Sprintf("TPS: %f FPS: %f\n%s", ebiten.ActualTPS(), ebiten.ActualFPS(), g.Camera.String())
+	txt := fmt.Sprintf("TPS: %f FPS: %f", ebiten.ActualTPS(), ebiten.ActualFPS())
 	ebitenutil.DebugPrintAt(screen, txt, 100, 0)
 
 }

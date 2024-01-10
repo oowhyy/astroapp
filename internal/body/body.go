@@ -47,6 +47,19 @@ func (b *Body) ApplyForce(force vector.Vector) {
 	b.Acc.Add(acc)
 }
 
+func (b *Body) DrawTrail(screen *ebiten.Image, trailLayer *ebiten.Image) {
+	screenSize := screen.Bounds()
+	screenDx := float64(screenSize.Dx())
+	screenDy := float64(screenSize.Dy())
+	worldCoord := b.WorldCoords(screenDx, screenDy)
+	screenX := worldCoord.X
+	screenY := worldCoord.Y
+	if trailLayer != nil {
+		worldPrevX, worldPrevY := b.PrevPos.X*ToScreenMult+screenDx/2.0, b.PrevPos.Y*ToScreenMult+screenDy/2.0
+		evector.StrokeLine(trailLayer, float32(worldPrevX), float32(worldPrevY), float32(screenX), float32(screenY), 1, b.trailColor, true)
+	}
+}
+
 func (b *Body) Draw(screen *ebiten.Image, trailLayer *ebiten.Image) {
 	bounds := b.image.Bounds().Size()
 	minDimScale := BaseImgSize / float64(min(bounds.X, bounds.Y))
@@ -63,10 +76,10 @@ func (b *Body) Draw(screen *ebiten.Image, trailLayer *ebiten.Image) {
 	screenX := worldCoord.X
 	screenY := worldCoord.Y
 
-	if trailLayer != nil {
-		worldPrevX, worldPrevY := b.PrevPos.X*ToScreenMult+screenDx/2.0, b.PrevPos.Y*ToScreenMult+screenDy/2.0
-		evector.StrokeLine(trailLayer, float32(worldPrevX), float32(worldPrevY), float32(screenX), float32(screenY), 1, b.trailColor, true)
-	}
+	// if trailLayer != nil {
+	// 	worldPrevX, worldPrevY := b.PrevPos.X*ToScreenMult+screenDx/2.0, b.PrevPos.Y*ToScreenMult+screenDy/2.0
+	// 	evector.StrokeLine(trailLayer, float32(worldPrevX), float32(worldPrevY), float32(screenX), float32(screenY), 1, b.trailColor, true)
+	// }
 
 	op.GeoM.Translate(screenX-halfW, screenY-halfH)
 	screen.DrawImage(b.image, op)

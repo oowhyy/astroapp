@@ -25,7 +25,7 @@
 
 #add {
     position: absolute;
-    top: 115px;
+    top: 120px;
     left: 15px;
     cursor: pointer;
     z-index: 2;
@@ -37,7 +37,7 @@
     transition: all .2s ease;
 
     &.active {
-        transform : rotate(45deg);
+        transform: rotate(45deg);
     }
 
     &:before,
@@ -74,10 +74,67 @@
 }
 
 #add.active {
+
     &:before,
     &:after {
         content: "";
         position: absolute;
         background: #dc4e4e
     }
+}
+
+
+#clearTrailDots {
+    user-select: none;
+    transform: rotate(-45deg);
+    text-decoration: underline;
+    position: absolute;
+    top: 315px;
+    letter-spacing: -12px;
+    left: 8px;
+    cursor: pointer;
+    z-index: 2;
+
+    width: 70px;
+    height: 70px;
+    line-height: 10px;
+    font-size: 100px;
+    color: #dc4e4e;
+    text-align: center;
+
+    transition: all .2s ease;
+    &:hover {
+        color: #e62c2c;
+    }
+
+}
+
+#speedControl {
+    user-select: none;
+    position: absolute;
+    top: 245px;
+
+    left: 15px;
+    cursor: pointer;
+    z-index: 2;
+
+    width: 70px;
+    height: 70px;
+    line-height: 10px;
+    font-size: 80px;
+    color: #a0a5ee;
+    text-align: center;
+
+    font-family: 'Nunito', sans-serif;
+    /* font-family: 'Raleway', sans-serif; */
+
+    transition: all .2s ease;
+
+    &:after {
+        content: "x";
+    }
+    &:hover {
+        color: #6897e8;
+    }
+
 }

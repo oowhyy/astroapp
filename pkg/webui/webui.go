@@ -9,12 +9,18 @@ type UserInterface interface {
 	WindowSize() (float64, float64)
 	IsPaused() bool
 	IsAddMode() bool
+
+	OnClearTrail(callback func())
+	OnSpeedUp(callback func() int)
+	OnSlowDown(callback func() int)
 }
 
 type WebInterface struct {
-	document    js.Value
-	pauseButton *button
-	addButton   *button
+	document     js.Value
+	pauseButton  *button
+	addButton    *button
+	clearButton  *button
+	speedControl js.Value
 }
 
 type button struct {
@@ -39,6 +45,11 @@ func NewWebInterface() *WebInterface {
 	// add button
 	wi.addButton = newButton(wi.document.Call("getElementById", "add"))
 	wi.addButton.elem.Call("addEventListener", "click", js.FuncOf(wi.toggleAdd))
+	// clearTrail button
+	wi.clearButton = newButton(wi.document.Call("getElementById", "clearTrailDots"))
+
+	// speed controller
+	wi.speedControl = wi.document.Call("getElementById", "speedControl")
 	return wi
 }
 
@@ -47,6 +58,35 @@ func (wi *WebInterface) WindowSize() (float64, float64) {
 	h := wi.document.Get("body").Get("clientHeight").Float()
 	return w, h
 
+}
+
+func (wi *WebInterface) OnClearTrail(callback func()) {
+	wi.clearButton.elem.Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) any {
+		callback()
+		return nil
+	}))
+}
+
+func (wi *WebInterface) OnSpeedUp(callback func() int) {
+	wi.speedControl.Call("addEventListener", "wheel", js.FuncOf(func(this js.Value, args []js.Value) any {
+		if args[0].Get("deltaY").Float() < 0 {
+			curspeed := callback()
+			wi.speedControl.Set("innerHTML", js.ValueOf(curspeed))
+		}
+		// fmt.Println("ARGS", args[0].Get("deltaY"))
+		return nil
+	}))
+}
+
+func (wi *WebInterface) OnSlowDown(callback func() int) {
+	wi.speedControl.Call("addEventListener", "wheel", js.FuncOf(func(this js.Value, args []js.Value) any {
+		if args[0].Get("deltaY").Float() > 0 {
+			curspeed := callback()
+			wi.speedControl.Set("innerHTML", js.ValueOf(curspeed))
+		}
+		// fmt.Println("ARGS", args[0].Get("deltaY"))
+		return nil
+	}))
 }
 
 func (wi *WebInterface) togglePlay(this js.Value, args []js.Value) any {
