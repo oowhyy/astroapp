@@ -66,8 +66,8 @@ type Game struct {
 	Bodies    map[int]*body.Body
 	GConstant float64
 
-	// parentMap map[string]string
-	simSpeed int
+	simSpeed  int
+	showTrail bool
 }
 
 func (g *Game) WorldSize() (float64, float64) {
@@ -195,7 +195,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// }
 		body.Draw(g.World, g.trailLayer)
 	}
-	g.World.DrawImage(g.trailLayer, &ebiten.DrawImageOptions{})
+	if g.showTrail {
+		g.World.DrawImage(g.trailLayer, &ebiten.DrawImageOptions{})
+	}
 	g.Camera.Render(g.World, screen)
 	// g.Camera.Render(g.trailLayer, screen)
 

@@ -57,6 +57,7 @@ func FromConfig(c *Config) *Game {
 
 	// setup ui callbacks
 	g.UI.OnClearTrail(func() {
+		g.showTrail = !g.showTrail
 		g.trailLayer.Clear()
 	})
 	g.UI.OnSpeedUp(func() int {
