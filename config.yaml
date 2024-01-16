@@ -16,6 +16,8 @@ rock: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/rock.png"
 arrow: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/blue_arrow.png"
 background: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/background.png"
 
+backgroundBig: "https://raw.githubusercontent.com/oowhyy/astroapp/main/assets/bg_big.png"
+
 gConstant: 0.004 ## ???
 
 bodies:
