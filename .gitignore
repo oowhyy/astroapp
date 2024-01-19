@@ -1,3 +1,4 @@
 *.drawio
 .vscode
 .gitignore
+.env

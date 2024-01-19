@@ -2,6 +2,7 @@ package body
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -60,30 +61,27 @@ func (b *Body) DrawTrail(screen *ebiten.Image, trailLayer *ebiten.Image) {
 	}
 }
 
-func (b *Body) Draw(screen *ebiten.Image, trailLayer *ebiten.Image) {
+
+func (b *Body) InWorldBounds(ww, wh int) image.Rectangle {
 	bounds := b.image.Bounds().Size()
-	minDimScale := BaseImgSize / float64(min(bounds.X, bounds.Y))
-	finalScale := minDimScale * b.Diameter
+	// return image.Rect(worldSize/2, worldSize/2, worldSize/2+bounds.X/2, worldSize/2+bounds.Y/2)
+	finalScale := b.Diameter * (BaseImgSize / float64(min(bounds.X, bounds.Y)))
+	w := finalScale * float64(bounds.X)
+	h := finalScale * float64(bounds.Y)
+	x0 := float64(ww/2) + b.Pos.X -w
+	y0 := float64(wh/2) + b.Pos.Y -h
+	return image.Rect(int(x0-100), int(y0-100), int(2*w+x0+100), int(2*h+y0+100))
+}
+
+func (b *Body) SpriteOp() (*ebiten.Image, float64, float64, float64) {
+	bounds := b.image.Bounds().Size()
+	finalScale := b.Diameter * (BaseImgSize / float64(min(bounds.X, bounds.Y)))
 	halfW := finalScale * float64(bounds.X) / 2
 	halfH := finalScale * float64(bounds.Y) / 2
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(finalScale, finalScale)
-
-	screenSize := screen.Bounds()
-	screenDx := float64(screenSize.Dx())
-	screenDy := float64(screenSize.Dy())
-	worldCoord := b.WorldCoords(screenDx, screenDy)
-	screenX := worldCoord.X
-	screenY := worldCoord.Y
-
-	// if trailLayer != nil {
-	// 	worldPrevX, worldPrevY := b.PrevPos.X*ToScreenMult+screenDx/2.0, b.PrevPos.Y*ToScreenMult+screenDy/2.0
-	// 	evector.StrokeLine(trailLayer, float32(worldPrevX), float32(worldPrevY), float32(screenX), float32(screenY), 1, b.trailColor, true)
-	// }
-
-	op.GeoM.Translate(screenX-halfW, screenY-halfH)
-	screen.DrawImage(b.image, op)
-	// screen.DrawImage(b.image, &ebiten.DrawImageOptions{})
+	op.GeoM.Translate(-halfW, -halfH)
+	return b.image, finalScale, -halfW, -halfH
 }
 
 func (b *Body) WorldCoords(worldX, worldY float64) vector.Vector {

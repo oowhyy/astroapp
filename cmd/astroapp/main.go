@@ -14,6 +14,9 @@ var (
 	configReroURI = "https://raw.githubusercontent.com/oowhyy/astroapp/main/config.yaml"
 )
 
+var refreshToken string
+var appAuth string
+
 func main() {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Render an image")
@@ -23,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	g := game.FromConfig(cfg)
+	g := game.FromConfig(cfg, refreshToken, appAuth)
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)

@@ -3,7 +3,7 @@ package game
 import (
 	"bytes"
 	"fmt"
-	"image/color"
+	"image"
 	"log"
 
 	_ "embed"
@@ -11,10 +11,10 @@ import (
 	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/oowhyy/astroapp/internal/body"
 	"github.com/oowhyy/astroapp/pkg/camera"
+	"github.com/oowhyy/astroapp/pkg/tilemap"
 	"github.com/oowhyy/astroapp/pkg/vector"
 	"github.com/oowhyy/astroapp/pkg/webui"
 )
@@ -50,12 +50,11 @@ const (
 )
 
 type Game struct {
-	World      *ebiten.Image
-	Camera     camera.Camera
-	UI         webui.UserInterface
-	background *ebiten.Image
+	worldSize vector.Vector
+	Camera    *camera.Camera
+	UI        webui.UserInterface
 
-	trailLayer *ebiten.Image
+	background *tilemap.TileMap
 
 	// for adding new body
 	addStage  AddStage
@@ -63,7 +62,7 @@ type Game struct {
 	blueArrow *ebiten.Image
 	newId     int
 
-	Bodies    map[int]*body.Body
+	Bodies    []*body.Body
 	GConstant float64
 
 	simSpeed  int
@@ -71,67 +70,68 @@ type Game struct {
 }
 
 func (g *Game) WorldSize() (float64, float64) {
-	p := g.World.Bounds().Size()
-	return float64(p.X), float64(p.Y)
+	return g.worldSize.X, g.worldSize.Y
 }
 
 func (g *Game) Update() error {
-	addMode := g.UI.IsAddMode()
-	w, h := g.WorldSize()
-	if addMode {
-		//add mode
-		switch g.addStage {
-		case AddStage(""):
-			g.addStage = AddStageMove
-			newId := len(g.Bodies) + 1
-			cfg := &body.BodyConfig{
-				Id:       newId,
-				Name:     "rock",
-				Image:    g.rockPath,
-				Mass:     1,
-				Diameter: 40,
-				X:        1000,
-				Y:        1000,
-				Dx:       0,
-				Dy:       0,
-			}
-			newb, err := body.FromConfig(cfg)
-			if err != nil {
-				panic("failed to add new body")
-			}
-			g.newId = newId
-			newb.Frozen = true
-			g.Bodies[newId] = newb
-		case AddStageMove:
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				g.addStage = AddStageDraw
-			}
-			mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
-			newb := g.Bodies[g.newId]
-			newb.Pos.X, newb.Pos.Y = body.ToLocal(mx, my, w, h)
-		case AddStageDraw:
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				g.addStage = AddStageDraw
-				g.addStage = AddStage("")
-				mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
-				mouseVec := vector.FromFloats(mx, my)
-				rockVec := g.Bodies[g.newId].WorldCoords(w, h)
-				velRaw := vector.Diff(rockVec, mouseVec)
-				scaled := vector.Scaled(velRaw, 1.0/200.0)
-				newb := g.Bodies[g.newId]
-				newb.Vel = scaled
-				newb.Frozen = false
-				g.newId = 0
-			}
-		}
-	} else {
-		g.Camera.Update()
-		if g.newId != 0 {
-			delete(g.Bodies, g.newId)
-			g.addStage = AddStage("")
-			g.newId = 0
-		}
-	}
+	fmt.Println(g.Bodies[0].InWorldBounds(10000,5625))
+	// addMode := g.UI.IsAddMode()
+	// w, h := g.WorldSize()
+	// if addMode {
+	// 	//add mode
+	// 	switch g.addStage {
+	// 	case AddStage(""):
+	// 		g.addStage = AddStageMove
+	// 		newId := len(g.Bodies) + 1
+	// 		cfg := &body.BodyConfig{
+	// 			Id:       newId,
+	// 			Name:     "rock",
+	// 			Image:    g.rockPath,
+	// 			Mass:     1,
+	// 			Diameter: 40,
+	// 			X:        1000,
+	// 			Y:        1000,
+	// 			Dx:       0,
+	// 			Dy:       0,
+	// 		}
+	// 		newb, err := body.FromConfig(cfg)
+	// 		if err != nil {
+	// 			panic("failed to add new body")
+	// 		}
+	// 		g.newId = newId
+	// 		newb.Frozen = true
+	// 		g.Bodies[newId] = newb
+	// 	case AddStageMove:
+	// 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	// 			g.addStage = AddStageDraw
+	// 		}
+	// 		mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
+	// 		newb := g.Bodies[g.newId]
+	// 		newb.Pos.X, newb.Pos.Y = body.ToLocal(mx, my, w, h)
+	// 	case AddStageDraw:
+	// 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	// 			g.addStage = AddStageDraw
+	// 			g.addStage = AddStage("")
+	// 			mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
+	// 			mouseVec := vector.FromFloats(mx, my)
+	// 			rockVec := g.Bodies[g.newId].WorldCoords(w, h)
+	// 			velRaw := vector.Diff(rockVec, mouseVec)
+	// 			scaled := vector.Scaled(velRaw, 1.0/200.0)
+	// 			newb := g.Bodies[g.newId]
+	// 			newb.Vel = scaled
+	// 			newb.Frozen = false
+	// 			g.newId = 0
+	// 		}
+	// 	}
+	// } else {
+	// 	g.Camera.Update()
+	// 	if g.newId != 0 {
+	// 		delete(g.Bodies, g.newId)
+	// 		g.addStage = AddStage("")
+	// 		g.newId = 0
+	// 	}
+	// }
+	g.Camera.Update()
 	if g.UI.IsPaused() {
 		return nil
 	}
@@ -159,55 +159,70 @@ func (g *Game) Update() error {
 		}
 		for _, body := range g.Bodies {
 			body.Update()
-			body.DrawTrail(g.World, g.trailLayer)
+			// body.DrawTrail(g.World, g.trailLayer)
 		}
 	}
-
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.World.Clear()
-	g.World.Fill(color.RGBA{50, 50, 50, 255})
-	op := &ebiten.DrawImageOptions{}
-	worldW, worldH := g.WorldSize()
-	bounds := g.background.Bounds()
-	op.GeoM.Scale(worldW/float64(bounds.Dx()), worldH/float64(bounds.Dy()))
-	g.World.DrawImage(g.background, op)
+	cx, cy := ebiten.CursorPosition()
+	mx, my := g.Camera.ScreenToWorld(cx, cy)
 
-	if g.addStage == AddStageDraw {
-		mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
-		mouseVec := vector.FromFloats(mx, my)
-		rockVec := g.Bodies[g.newId].WorldCoords(worldW, worldH)
-		velRaw := vector.Diff(rockVec, mouseVec)
-		g.DrawPlanetVector(g.World, rockVec, velRaw)
-		toDraw := vector.Scaled(velRaw, 1.0/500.0)
-		txt := toDraw.String()
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(rockVec.X+50, rockVec.Y+50)
-		text.Draw(g.World, txt, mplusNormalFace, op)
-
+	g.Camera.RenderTilemap(screen, g.background)
+	// g.Camera.CleanUpVisible(screen, g.bodiesMap)
+	drawers := make([]camera.Drawer, len(g.Bodies))
+	for i, b := range g.Bodies {
+		drawers[i] = camera.Drawer(b)
 	}
+	g.Camera.RenderDrawers(screen, drawers)
+
+	// dd := make([]tilemap.Drawer, len(g.b0))
+	// for i, b := range g.b0 {
+	// 	dd[i] = tilemap.Drawer(b)
+	// }
+	// g.bodiesMap.Redraw(dd)
+	// g.Camera.RenderTilemap(screen, g.bodiesMap)
+	// sub := g.world.SubImage(rect).(*ebiten.Image)
+	// screen.DrawImage(sub, nil)
+	// g.World.Clear()
+	// g.World.Fill(color.RGBA{50, 50, 50, 255})
+
+	// worldW, worldH := g.WorldSize()
+
+	// if g.addStage == AddStageDraw {
+	// 	mx, my := g.Camera.ScreenToWorld(ebiten.CursorPosition())
+	// 	mouseVec := vector.FromFloats(mx, my)
+	// 	rockVec := g.Bodies[g.newId].WorldCoords(worldW, worldH)
+	// 	velRaw := vector.Diff(rockVec, mouseVec)
+	// 	g.DrawPlanetVector(g.World, rockVec, velRaw)
+	// 	toDraw := vector.Scaled(velRaw, 1.0/500.0)
+	// 	txt := toDraw.String()
+	// 	op := &text.DrawOptions{}
+	// 	op.GeoM.Translate(rockVec.X+50, rockVec.Y+50)
+	// 	text.Draw(g.World, txt, mplusNormalFace, op)
+	// }
 	// bodies
-	for _, body := range g.Bodies {
-		// if body.TrailLayer != nil {
-		// 	g.World.DrawImage(body.TrailLayer, trailOps)
-		// }
-		body.Draw(g.World, g.trailLayer)
-	}
-	if g.showTrail {
-		g.World.DrawImage(g.trailLayer, &ebiten.DrawImageOptions{})
-	}
-	g.Camera.Render(g.World, screen)
+	// for _, body := range g.Bodies {
+	// 	body.Draw(g.World, g.trailLayer)
+	// }
+	// if g.showTrail {
+	// 	g.World.DrawImage(g.trailLayer, &ebiten.DrawImageOptions{})
+	// }
+	// g.Camera.Render(g.World, screen)
 	// g.Camera.Render(g.trailLayer, screen)
 
+	ebitenutil.DebugPrintAt(screen,
+		fmt.Sprintf("cursor screen: %d %d\ncursor world: %f %f\nCamera Rect: %v\nCameraZoom: %f", cx, cy, mx, my, g.Camera.GetRect(), g.Camera.ZoomFactor()),
+		10, 500,
+	)
 	txt := fmt.Sprintf("TPS: %f FPS: %f", ebiten.ActualTPS(), ebiten.ActualFPS())
 	ebitenutil.DebugPrintAt(screen, txt, 100, 0)
 
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	g.Camera.ViewPort = vector.FromInts(outsideWidth, outsideHeight)
+	g.Camera.ScreenSize = image.Pt(outsideWidth, outsideHeight)
 	return outsideWidth, outsideHeight
 }
 

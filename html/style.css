@@ -24,6 +24,7 @@
 }
 
 #add {
+    display: none;
     position: absolute;
     top: 120px;
     left: 15px;
@@ -106,7 +107,7 @@
     &:hover {
         color: #e62c2c;
     }
-
+    display: none;
 }
 
 #speedControl {
