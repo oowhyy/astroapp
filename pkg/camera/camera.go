@@ -48,23 +48,23 @@ func (c *Camera) GetRect() image.Rectangle {
 	return image.Rect(int(x1), int(y1), int(x2), int(y2))
 }
 
-func (c *Camera) RenderDrawers(screen *ebiten.Image, drawers []Drawer) {
+func (c *Camera) RenderDrawer(screen *ebiten.Image, drawer Drawer) {
 	cameraRect := c.GetRect()
-	scale0 := c.ZoomFactor()
-	for _, dr := range drawers {
-		dBounds := dr.InWorldBounds(c.WorldSize.X, c.WorldSize.Y)
-		if !dBounds.Overlaps(cameraRect) {
-			continue
-		}
-		bodyX := dBounds.Min.X + dBounds.Dx()/2
-		bodyY := dBounds.Min.Y + dBounds.Dy()/2
-		screenX, screenY := c.WorldToScreen(float64(bodyX), float64(bodyY))
-		img, scale, tx, ty := dr.SpriteOp()
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(scale*scale0, scale*scale0)
-		op.GeoM.Translate(tx*scale0+float64(screenX), ty*scale0+float64(screenY))
-		screen.DrawImage(img, op)
+	dBounds := drawer.InWorldBounds(c.WorldSize.X, c.WorldSize.Y)
+	if !dBounds.Overlaps(cameraRect) {
+		return
 	}
+
+	scale0 := c.ZoomFactor()
+	// bodyX := dBounds.Min.X + dBounds.Dx()/2
+	// bodyY := dBounds.Min.Y + dBounds.Dy()/2
+	bodyX, bodyY := drawer.WorldCoords(c.WorldSize.X, c.WorldSize.Y)
+	screenX, screenY := c.WorldToScreen(bodyX, bodyY)
+	img, scale, tx, ty := drawer.SpriteOp()
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(scale*scale0, scale*scale0)
+	op.GeoM.Translate(tx*scale0+float64(screenX), ty*scale0+float64(screenY))
+	screen.DrawImage(img, op)
 }
 
 func (c *Camera) RenderTilemap(screen *ebiten.Image, tm *tilemap.TileMap) {

@@ -1,72 +1,88 @@
 package tilemap
 
 import (
-	"fmt"
 	"image"
-	"time"
+	"image/color"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
+
+	// evector "github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/oowhyy/astroapp/pkg/vector"
 )
 
+var pixel *ebiten.Image
 
-
-func NewTileMapEmpty(depth int, tileSize int, worldW, worldH int) *TileMap {
-	tic := time.Now()
-	maxDepth := depth
-
-	defer func() {
-		fmt.Println("done new empty tilemap from zip in. Mem usage:", time.Since(tic).Seconds())
-		PrintMemUsage()
-	}()
-	tm := &TileMap{
-		tileSize: tileSize,
-		worldW:   worldW,
-		worldH:   worldH,
-	}
-	fmt.Println(tm.tileSize)
-	perfectSize := tm.tileSize << maxDepth
-	fmt.Println("perfect size", perfectSize)
-	// get resized layers
-	tm.maxDepth = maxDepth
-
-	var build func(start *Tile)
-	build = func(start *Tile) {
-		if start.bounds.Empty() {
-			panic("empty bounds")
-		}
-		// name := fmt.Sprintf("%d/%d/%d.png", start.z, start.x, start.y)
-		start.decoded = ebiten.NewImage(tileSize, tileSize)
-		// no children on last level
-		if start.z == maxDepth {
-			return
-		}
-		start.children = make([]*Tile, 4)
-		halfW := start.bounds.Dx() / 2
-		topX, topY := start.bounds.Min.X, start.bounds.Min.Y
-		for i := 0; i < 2; i++ {
-			for j := 0; j < 2; j++ {
-				rect0 := image.Rect(halfW*j, halfW*i, halfW*(j+1), halfW*(i+1))
-				child := &Tile{
-					bounds: rect0.Add(image.Point{topX, topY}),
-					z:      start.z + 1,
-					x:      start.x*2 + j,
-					y:      start.y*2 + i,
-				}
-				build(child)
-				start.children[2*i+j] = child
-			}
-		}
-	}
-	root := &Tile{
-		bounds: image.Rect(0, 0, perfectSize, perfectSize),
-		z:      0,
-	}
-	build(root)
-	tm.Root = root
-	return tm
+func init() {
+	pixel = ebiten.NewImage(1, 1)
+	pixel.Fill(color.RGBA{255, 0, 0, 255})
 }
 
+func DrawLine(screen *ebiten.Image, hue float64, from, to vector.Vector) {
+	diff := vector.Diff(to, from)
+	op := &colorm.DrawImageOptions{}
+	len := diff.Len()
+	// width := 30.0
+	op.GeoM.Scale(len, 1)
+	angle := math.Atan2(diff.Y, diff.X)
+	op.GeoM.Rotate(angle)
+	// yy := width / 2 * math.Cos(angle)
+	// xx := width / 2 * math.Sin(angle)
+	op.GeoM.Translate(from.X, from.Y)
+	cmatrix := colorm.ColorM{}
+	// r, g, b, a := c.RGBA()
+	// cmatrix.Translate(float64(r)/256, float64(g)/256, float64(b)/256, float64(a))
+	cmatrix.RotateHue(hue)
+	colorm.DrawImage(screen, pixel, cmatrix, op)
+	// colorm.ScaleColor(1, 1, 1, 1)
+	// screen.DrawImage(pixel, op)
 
+}
+
+type Trailer interface {
+	TrailLine(worldW, worldH int) (prevX, prevY, curX, curY float64)
+	HueTheta() float64
+}
+
+func (tm *TileMap) DrawTrail(trailer Trailer) {
+	x0, y0, x1, y1 := trailer.TrailLine(tm.WorldSize())
+	rx0, ry0, rx1, ry1 := x0, y0, x1, y1
+	if x0 > x1 {
+		x0, x1 = x1, x0
+	}
+	if y0 > y1 {
+		y0, y1 = y1, y0
+	}
+	color := trailer.HueTheta()
+
+	var dfs func(start *Tile)
+	dfs = func(start *Tile) {
+
+		if !Overlaps(start.bounds.Bounds(), x0, y0, x1, y1) {
+			return
+		}
+		scalar := float64(int(1) << (tm.Depth() - start.z))
+		xx0 := rx0 - float64(start.bounds.Min.X)
+		yy0 := ry0 - float64(start.bounds.Min.Y)
+		xx1 := rx1 - float64(start.bounds.Min.X)
+		yy1 := ry1 - float64(start.bounds.Min.Y)
+		// fmt.Println(sprite.Bounds())
+		// op := &ebiten.DrawImageOptions{}
+		// evector.StrokeLine(start.decoded, float32(xx0/scalar), float32(yy0/scalar), float32(xx1/scalar), float32(yy1/scalar), 1, color.White, true)
+		DrawLine(start.decoded, color, vector.FromFloats(xx0/scalar, yy0/scalar), vector.FromFloats(xx1/scalar, yy1/scalar))
+
+		for _, c := range start.Children() {
+			dfs(c)
+		}
+	}
+	dfs(tm.Root)
+}
+
+func Overlaps(r image.Rectangle, x0, y0, x1, y1 float64) bool {
+	return float64(r.Min.X) < x1 && x0 < float64(r.Max.X) &&
+		float64(r.Min.Y) < y1 && y0 < float64(r.Max.Y)
+}
 
 // func (tm *TileMap) Redraw(drawers []Drawer) {
 // 	ww, wh := tm.WorldSize()

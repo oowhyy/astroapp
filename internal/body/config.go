@@ -1,11 +1,10 @@
 package body
 
 import (
-	"fmt"
 	"math"
+	"math/rand"
 
-	"github.com/oowhyy/astroapp/pkg/common"
-	"github.com/oowhyy/astroapp/pkg/extracolor"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/oowhyy/astroapp/pkg/vector"
 )
 
@@ -22,7 +21,7 @@ type BodyConfig struct {
 	Dy       float64 `yaml:"dy"`
 }
 
-func FromConfig(c *BodyConfig) (*Body, error) {
+func FromConfig(c *BodyConfig, image *ebiten.Image) (*Body, error) {
 	if len(c.Image) == 0 {
 		panic("no image provided")
 	}
@@ -40,16 +39,10 @@ func FromConfig(c *BodyConfig) (*Body, error) {
 	b.Pos = vector.FromFloats(x, y)
 	b.Vel = vector.FromFloats(dx, dy)
 
-	dia := math.Log2(c.Diameter + 1) /3
+	dia := math.Log2(c.Diameter+1) / 3
 	b.Diameter = dia
-
-	image, err := common.ImageFromPath(c.Image)
-	if err != nil {
-		return nil, err
-	}
+	b.trailHue = rand.Float64() * math.Pi * 2
 	b.image = image
-	b.trailColor = extracolor.RandomRGB()
-	fmt.Println(c.Name, dy, c.Dy)
 	return b, nil
 }
 

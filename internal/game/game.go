@@ -55,6 +55,7 @@ type Game struct {
 	UI        webui.UserInterface
 
 	background *tilemap.TileMap
+	trailLayer *tilemap.TileMap
 
 	// for adding new body
 	addStage  AddStage
@@ -74,7 +75,6 @@ func (g *Game) WorldSize() (float64, float64) {
 }
 
 func (g *Game) Update() error {
-	fmt.Println(g.Bodies[0].InWorldBounds(10000,5625))
 	// addMode := g.UI.IsAddMode()
 	// w, h := g.WorldSize()
 	// if addMode {
@@ -159,7 +159,9 @@ func (g *Game) Update() error {
 		}
 		for _, body := range g.Bodies {
 			body.Update()
-			// body.DrawTrail(g.World, g.trailLayer)
+			if g.showTrail {
+				g.trailLayer.DrawTrail(body)
+			}
 		}
 	}
 	return nil
@@ -170,12 +172,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	mx, my := g.Camera.ScreenToWorld(cx, cy)
 
 	g.Camera.RenderTilemap(screen, g.background)
-	// g.Camera.CleanUpVisible(screen, g.bodiesMap)
-	drawers := make([]camera.Drawer, len(g.Bodies))
-	for i, b := range g.Bodies {
-		drawers[i] = camera.Drawer(b)
+	if g.showTrail {
+		g.Camera.RenderTilemap(screen, g.trailLayer)
 	}
-	g.Camera.RenderDrawers(screen, drawers)
+
+	for _, b := range g.Bodies {
+		g.Camera.RenderDrawer(screen, b)
+	}
 
 	// dd := make([]tilemap.Drawer, len(g.b0))
 	// for i, b := range g.b0 {

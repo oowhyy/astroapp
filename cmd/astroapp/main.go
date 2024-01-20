@@ -3,15 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/oowhyy/astroapp/internal/game"
+	"github.com/oowhyy/astroapp/pkg/dropbox"
+	"github.com/oowhyy/astroapp/pkg/webloader"
 	"gopkg.in/yaml.v3"
-)
-
-var (
-	configReroURI = "https://raw.githubusercontent.com/oowhyy/astroapp/main/config.yaml"
 )
 
 var refreshToken string
@@ -22,11 +19,17 @@ func main() {
 	ebiten.SetWindowTitle("Render an image")
 	cfg := &game.Config{}
 	err := readConfig(cfg)
-	fmt.Println("mercury:", cfg.Bodies[1])
 	if err != nil {
 		log.Fatal(err)
 	}
-	g := game.FromConfig(cfg, refreshToken, appAuth)
+	accessToken, err := dropbox.GetAccessToken(refreshToken, appAuth)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("token len", len(accessToken))
+	DBcfg := dropbox.NewConfig(accessToken)
+	client := dropbox.New(DBcfg)
+	g := game.FromConfig(cfg, client)
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
@@ -34,13 +37,11 @@ func main() {
 }
 
 func readConfig(cfg *game.Config) error {
-	fmt.Println("config URL:", configReroURI)
-	resp, err := http.Get(configReroURI)
-	if err != nil {
-		log.Fatal(err)
+	yamlString := webloader.LoadFile("config.yaml")
+	if yamlString == "" {
+		log.Fatal("no yaml string from loader")
 	}
-	defer resp.Body.Close()
-	err = yaml.NewDecoder(resp.Body).Decode(cfg)
+	err := yaml.Unmarshal([]byte(yamlString), cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
