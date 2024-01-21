@@ -29,7 +29,10 @@ func main() {
 	fmt.Println("token len", len(accessToken))
 	DBcfg := dropbox.NewConfig(accessToken)
 	client := dropbox.New(DBcfg)
-	g := game.FromConfig(cfg, client)
+	g,err := game.FromConfig(cfg, client)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)

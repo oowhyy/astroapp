@@ -34,6 +34,24 @@ func (g *Game) DrawLine(img *ebiten.Image, from, to vector.Vector) {
 
 }
 
+func (g *Game) DrawArrow(screen *ebiten.Image, from, to vector.Vector) {
+
+	diff := vector.Diff(to, from)
+	op := &ebiten.DrawImageOptions{}
+	len := diff.Len()
+	width := 30.0
+	arrowBounds := g.blueArrow.Bounds()
+	op.GeoM.Scale(len/float64(arrowBounds.Dx()), width/float64(arrowBounds.Dy()))
+	angle := math.Atan2(diff.Y, diff.X)
+	op.GeoM.Rotate(angle)
+	yy := width / 2 * math.Cos(angle)
+	xx := width / 2 * math.Sin(angle)
+	op.GeoM.Translate(from.X+xx, from.Y-yy)
+
+	screen.DrawImage(g.blueArrow, op)
+
+}
+
 func (g *Game) DrawPlanetVector(img *ebiten.Image, worldPos vector.Vector, vec vector.Vector) {
 	limVec := vec.Clone()
 	limVec.Limit(-1000, 1000)

@@ -16,7 +16,6 @@ const (
 )
 
 type Body struct {
-	Id      int
 	Name    string
 	Pos     vector.Vector
 	PrevPos vector.Vector
@@ -69,12 +68,6 @@ func (b *Body) HueTheta() float64 {
 	return b.trailHue
 }
 
-func (b *Body) WorldCoords(ww, wh int) (float64, float64) {
-	halfw := float64(ww) / 2
-	halfh := float64(wh) / 2
-	return b.Pos.X + halfw, b.Pos.Y + halfh
-}
-
 func (b *Body) InWorldBounds(ww, wh int) image.Rectangle {
 	bounds := b.image.Bounds().Size()
 	// return image.Rect(worldSize/2, worldSize/2, worldSize/2+bounds.X/2, worldSize/2+bounds.Y/2)
@@ -94,8 +87,21 @@ func (b *Body) SpriteOp() (*ebiten.Image, float64, float64, float64) {
 	return b.image, finalScale, -halfW, -halfH
 }
 
-func ToLocal(wordlX, wordlY, wW, wH float64) (float64, float64) {
-	return (wordlX - wW/2.0) / ToScreenMult, (wordlY - wH/2.0) / ToScreenMult
+// SetWorldPos sets body.Pos to new coords relative to world size
+func (b *Body) SetWorldPos(newX, newY float64, wW, wH int) {
+	b.Pos.X, b.Pos.Y = (newX - float64(wW)/2.0), (newY - float64(wH)/2.0)
+}
+
+func (b *Body) WorldPos(ww, wh int) (float64, float64) {
+	halfw := float64(ww) / 2.0
+	halfh := float64(wh) / 2.0
+	return b.Pos.X + halfw, b.Pos.Y + halfh
+}
+
+func (b *Body) WorldPosVec(ww, wh int) vector.Vector {
+	v2 := vector.FromInts(ww, wh)
+	v2.Scale(0.5)
+	return vector.Sum(b.Pos, v2)
 }
 
 func (b *Body) Overlap(b2 *Body) bool {

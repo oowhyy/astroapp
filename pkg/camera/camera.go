@@ -58,7 +58,7 @@ func (c *Camera) RenderDrawer(screen *ebiten.Image, drawer Drawer) {
 	scale0 := c.ZoomFactor()
 	// bodyX := dBounds.Min.X + dBounds.Dx()/2
 	// bodyY := dBounds.Min.Y + dBounds.Dy()/2
-	bodyX, bodyY := drawer.WorldCoords(c.WorldSize.X, c.WorldSize.Y)
+	bodyX, bodyY := drawer.WorldPos(c.WorldSize.X, c.WorldSize.Y)
 	screenX, screenY := c.WorldToScreen(bodyX, bodyY)
 	img, scale, tx, ty := drawer.SpriteOp()
 	op := &ebiten.DrawImageOptions{}

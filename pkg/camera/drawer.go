@@ -18,7 +18,7 @@ func init() {
 
 type Drawer interface {
 	InWorldBounds(worldWidth, worldHeight int) image.Rectangle
-	WorldCoords(worldW, worldH int) (float64, float64)
+	WorldPos(worldW, worldH int) (float64, float64)
 	SpriteOp() (sprite *ebiten.Image, scale float64, tx, ty float64)
 }
 

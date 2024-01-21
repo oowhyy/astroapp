@@ -1,17 +1,17 @@
 package game
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/png"
-	"log"
+	"io"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/oowhyy/astroapp/internal/body"
 	"github.com/oowhyy/astroapp/pkg/camera"
 	"github.com/oowhyy/astroapp/pkg/dropbox"
 	"github.com/oowhyy/astroapp/pkg/tilemap"
-	"github.com/oowhyy/astroapp/pkg/vector"
 	"github.com/oowhyy/astroapp/pkg/webui"
 )
 
@@ -29,7 +29,7 @@ type Config struct {
 // 	WorldHeight = 4000
 // )
 
-func FromConfig(c *Config, client *dropbox.Client) *Game {
+func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 	g := &Game{
 		// parentMap: make(map[string]string, len(c.Bodies)),
 	}
@@ -38,51 +38,61 @@ func FromConfig(c *Config, client *dropbox.Client) *Game {
 	g.GConstant = c.GConstant
 	g.simSpeed = 1
 
+	// fetch images form dropbox
 	assetsZip, err := client.FetchZip("/assets.zip")
 	if err != nil {
-		fmt.Println("assets err")
-		panic(err)
+		return nil, err
 	}
-	assets := map[string]*ebiten.Image{}
+	assets := map[string]io.Reader{}
 	for _, f := range assetsZip.File {
 		file, err := f.Open()
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("open file error: %w", err)
 		}
-		decoded, err := png.Decode(file)
+		buff := new(bytes.Buffer)
+		_, err = buff.ReadFrom(file)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("buffer ReadFrom error: %w", err)
 		}
-		assets[f.Name] = ebiten.NewImageFromImage(decoded)
+		assets[f.Name] = buff
 		file.Close()
 	}
 
-	g.rockPath = c.Rock
-
-	// get bg from drop box
+	// fetch background from dropbox
 	tiles, err := tilemap.NewTileMapFromDropboxZip(client, "/bg_tiles.zip")
 	if err != nil {
 		panic(err)
 	}
 	g.background = tiles
 	worldX, worldY := 10000, 5625
+	g.worldSize = image.Pt(worldX, worldY)
 	g.trailLayer = tilemap.NewTileMapEmpty(tiles.Depth(), tiles.TileSize(), worldX, worldY)
 	fmt.Println("tilemap ok")
 
-	g.blueArrow = assets["blue_arrow.png"]
-	// g.trailLayer = ebiten.NewImage(WorldWidth, WorldHeight)
+	// game other assets
+	arrowPng, err := png.Decode(assets["blue_arrow.png"])
+	if err != nil {
+		return nil, err
+	}
+	g.blueArrow = ebiten.NewImageFromImage(arrowPng)
+	rockPng, err := png.Decode(assets["rock.png"])
+	if err != nil {
+		return nil, err
+	}
+	g.rock = ebiten.NewImageFromImage(rockPng)
 
 	// center camera
 	screenW, screenH := g.UI.WindowSize()
 	g.Camera = camera.NewCamera(image.Pt(worldX, worldY), image.Pt(int(screenW), int(screenH)))
 	g.Camera.Translate((float64(worldX)-screenW)/2, (float64(worldY)-screenH)/2)
-	g.worldSize = vector.FromFloats(screenW, screenH)
 
 	// setup ui callbacks
 	g.showTrail = true
 	g.UI.OnClearTrail(func() {
-		g.trailLayer.Clear()
 		g.showTrail = !g.showTrail
+		if g.showTrail {
+			g.trailLayer.Clear()
+		}
 	})
 	g.UI.OnSpeedUp(func() int {
 		if g.simSpeed >= 9 {
@@ -123,12 +133,12 @@ func FromConfig(c *Config, client *dropbox.Client) *Game {
 		imgName := conf.Name + ".png"
 		body, err := body.FromConfig(conf, assets[imgName])
 		if err != nil {
-			log.Fatalf("failed to load body from config: %s", err)
+			return nil, fmt.Errorf("failed to load body from config: %w", err)
 		}
 		// bodiesMap[body.Id] = body
 		bodies = append(bodies, body)
 	}
 	g.Bodies = bodies
 
-	return g
+	return g, nil
 }

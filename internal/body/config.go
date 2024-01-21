@@ -1,6 +1,8 @@
 package body
 
 import (
+	"image/png"
+	"io"
 	"math"
 	"math/rand"
 
@@ -11,7 +13,6 @@ import (
 type BodyConfig struct {
 	Id       int
 	Name     string  `yaml:"name"`
-	Image    string  `yaml:"image"`
 	Parent   string  `yaml:"parent"`
 	Mass     float64 `yaml:"mass"`
 	Diameter float64 `yaml:"diameter"`
@@ -21,12 +22,9 @@ type BodyConfig struct {
 	Dy       float64 `yaml:"dy"`
 }
 
-func FromConfig(c *BodyConfig, image *ebiten.Image) (*Body, error) {
-	if len(c.Image) == 0 {
-		panic("no image provided")
-	}
+func FromConfig(c *BodyConfig, imgBuf io.Reader) (*Body, error) {
 	b := &Body{
-		Id:   c.Id,
+
 		Name: c.Name,
 		Mass: c.Mass,
 	}
@@ -42,10 +40,32 @@ func FromConfig(c *BodyConfig, image *ebiten.Image) (*Body, error) {
 	dia := math.Log2(c.Diameter+1) / 3
 	b.Diameter = dia
 	b.trailHue = rand.Float64() * math.Pi * 2
-	b.image = image
+	decoded, err := png.Decode(imgBuf)
+	if err != nil {
+		return nil, err
+	}
+	b.image = ebiten.NewImageFromImage(decoded)
 	return b, nil
 }
 
-// func NewBody(img *ebiten.Image, name string) Body {
-// 	return
-// }
+func NewBody(c *BodyConfig, img *ebiten.Image) *Body {
+	b := &Body{
+
+		Name: c.Name,
+		Mass: c.Mass,
+	}
+	// startAngle := rand.Float64() * math.Pi * 2
+	x := c.X * DistScale
+	y := c.Y * DistScale
+	dx := c.Dx * DistScale
+	dy := c.Dy * DistScale
+
+	b.Pos = vector.FromFloats(x, y)
+	b.Vel = vector.FromFloats(dx, dy)
+
+	dia := math.Log2(c.Diameter+1) / 3
+	b.Diameter = dia
+	b.trailHue = rand.Float64() * math.Pi * 2
+	b.image = img
+	return b
+}
