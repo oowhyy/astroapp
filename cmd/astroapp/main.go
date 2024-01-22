@@ -7,7 +7,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/oowhyy/astroapp/internal/game"
 	"github.com/oowhyy/astroapp/pkg/dropbox"
-	"github.com/oowhyy/astroapp/pkg/webloader"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,11 +16,7 @@ var appAuth string
 func main() {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Render an image")
-	cfg := &game.Config{}
-	err := readConfig(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	accessToken, err := dropbox.GetAccessToken(refreshToken, appAuth)
 	if err != nil {
 		panic(err)
@@ -29,7 +24,13 @@ func main() {
 	fmt.Println("token len", len(accessToken))
 	DBcfg := dropbox.NewConfig(accessToken)
 	client := dropbox.New(DBcfg)
-	g,err := game.FromConfig(cfg, client)
+	cfg := &game.Config{}
+
+	err = readConfig(client, cfg)
+	if err != nil {
+		panic(err)
+	}
+	g, err := game.FromConfig(cfg, client)
 	if err != nil {
 		panic(err)
 	}
@@ -39,14 +40,15 @@ func main() {
 	}
 }
 
-func readConfig(cfg *game.Config) error {
-	yamlString := webloader.LoadFile("config.yaml")
-	if yamlString == "" {
-		log.Fatal("no yaml string from loader")
-	}
-	err := yaml.Unmarshal([]byte(yamlString), cfg)
+func readConfig(client *dropbox.Client, cfg *game.Config) error {
+	file, err := client.FetchFile("/config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+	defer file.Close()
+	err = yaml.NewDecoder(file).Decode(cfg)
+	if err != nil {
+		return err
 	}
 	return nil
 }

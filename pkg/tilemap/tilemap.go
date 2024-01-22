@@ -1,13 +1,13 @@
 package tilemap
 
 import (
+	"archive/zip"
 	"fmt"
 	"image"
 	"runtime"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/oowhyy/astroapp/pkg/dropbox"
 )
 
 type TileMap struct {
@@ -79,12 +79,9 @@ func NewTileMapEmpty(depth int, tileSize int, worldW, worldH int) *TileMap {
 	return tm
 }
 
-func NewTileMapFromDropboxZip(client *dropbox.Client, zipPath string) (*TileMap, error) {
+func NewTileMapFromZip(zip *zip.Reader) (*TileMap, error) {
 	tic := time.Now()
-	zip, err := client.FetchZip(zipPath)
-	if err != nil {
-		return nil, err
-	}
+
 	n := 3*len(zip.File) + 1
 	maxDepth := 0
 	for n > 4 {

@@ -158,11 +158,15 @@ func (g *Game) Update() error {
 	return nil
 }
 
+
 func (g *Game) Draw(screen *ebiten.Image) {
 	cx, cy := ebiten.CursorPosition()
 	mx, my := g.Camera.ScreenToWorld(cx, cy)
 
+
+
 	g.Camera.RenderTilemap(screen, g.background)
+
 	if g.showTrail {
 		g.Camera.RenderTilemap(screen, g.trailLayer)
 	}

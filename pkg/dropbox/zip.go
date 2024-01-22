@@ -28,3 +28,13 @@ func (client *Client) FetchZip(zipPath string) (*zip.Reader, error) {
 	}
 	return reader, nil
 }
+
+func (client *Client) FetchFile(path string) (io.ReadCloser, error) {
+	f, err := client.Files.Download(&DownloadInput{
+		Path: path,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("db download error: %w", err)
+	}
+	return f.Body, nil
+}

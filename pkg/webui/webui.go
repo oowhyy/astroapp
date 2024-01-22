@@ -2,17 +2,22 @@ package webui
 
 import (
 	"syscall/js"
+	"time"
 )
 
 type UserInterface interface {
+	// USER TO APP
 	// TODO: if window resize listener is needed - implement callback instead
 	WindowSize() (float64, float64)
 	IsPaused() bool
 	IsAddMode() bool
-
 	OnClearTrail(callback func())
 	OnSpeedUp(callback func() int)
 	OnSlowDown(callback func() int)
+
+	// APP TO USER
+	SetLoadingMessage(s string)
+	DoneLoading()
 }
 
 type WebInterface struct {
@@ -21,6 +26,14 @@ type WebInterface struct {
 	addButton    *button
 	clearButton  *button
 	speedControl js.Value
+
+	loadingDiv     js.Value
+	isLoading      bool
+	done           chan bool
+	messagesChan   chan string
+	loadingTimer   time.Duration
+	loadingMessage string
+	oldMsgs        string
 }
 
 type button struct {
@@ -37,7 +50,10 @@ func newButton(elem js.Value) *button {
 }
 
 func NewWebInterface() *WebInterface {
-	wi := &WebInterface{}
+	wi := &WebInterface{
+		done:         make(chan bool),
+		messagesChan: make(chan string),
+	}
 	wi.document = js.Global().Get("document")
 	// play button
 	wi.pauseButton = newButton(wi.document.Call("getElementById", "play-pause"))
@@ -47,9 +63,10 @@ func NewWebInterface() *WebInterface {
 	wi.addButton.elem.Call("addEventListener", "click", js.FuncOf(wi.toggleAdd))
 	// clearTrail button
 	wi.clearButton = newButton(wi.document.Call("getElementById", "clearTrailDots"))
-
 	// speed controller
 	wi.speedControl = wi.document.Call("getElementById", "speedControl")
+
+	wi.loadingDiv = wi.document.Call("getElementById", "loading")
 	return wi
 }
 
