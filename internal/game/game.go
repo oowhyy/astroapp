@@ -122,11 +122,9 @@ func (g *Game) Update() error {
 			g.addStage = AddStage("")
 		}
 	}
-
 	if g.UI.IsPaused() {
 		return nil
 	}
-
 	// physics
 	for ii := 0; ii < g.simSpeed; ii++ {
 		for _, body := range g.Bodies {
@@ -162,24 +160,17 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	cx, cy := ebiten.CursorPosition()
 	mx, my := g.Camera.ScreenToWorld(cx, cy)
-
-
-
 	g.Camera.RenderTilemap(screen, g.background)
-
 	if g.showTrail {
 		g.Camera.RenderTilemap(screen, g.trailLayer)
 	}
-
 	for _, b := range g.Bodies {
 		g.Camera.RenderDrawer(screen, b)
 	}
 	if g.newBody != nil {
 		g.Camera.RenderDrawer(screen, g.newBody)
 	}
-
 	worldW, worldH := g.WorldSize()
-
 	if g.addStage == AddStageDraw {
 		screenCursorX, screenCursorY := ebiten.CursorPosition()
 		// mx, my := g.Camera.ScreenToWorld(screenCursorX, screenCursorY)
@@ -202,7 +193,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	)
 	txt := fmt.Sprintf("TPS: %f FPS: %f", ebiten.ActualTPS(), ebiten.ActualFPS())
 	ebitenutil.DebugPrintAt(screen, txt, 100, 0)
-
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

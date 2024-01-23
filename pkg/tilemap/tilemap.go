@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	"runtime"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -16,6 +15,8 @@ type TileMap struct {
 	worldW   int
 	worldH   int
 	Root     *Tile
+
+
 }
 
 func (tm *TileMap) Depth() int {
@@ -29,6 +30,16 @@ func (tm *TileMap) TileSize() int {
 func (tm *TileMap) WorldSize() (int, int) {
 	return tm.worldW, tm.worldH
 }
+
+// func (tm *TileMap) TotalTiles() int {
+// 	tt := 1
+// 	d := tm.Depth() + 1
+// 	for d > 0 {
+// 		tt *= 4
+// 		d--
+// 	}
+// 	return (tt - 1) / 3
+// }
 
 func NewTileMapEmpty(depth int, tileSize int, worldW, worldH int) *TileMap {
 	maxDepth := depth
@@ -46,9 +57,7 @@ func NewTileMapEmpty(depth int, tileSize int, worldW, worldH int) *TileMap {
 
 	var build func(start *Tile)
 	build = func(start *Tile) {
-		if start.bounds.Empty() {
-			panic("empty bounds")
-		}
+
 		start.decoded = ebiten.NewImage(tileSize, tileSize)
 		if start.z == maxDepth {
 			return
@@ -60,11 +69,13 @@ func NewTileMapEmpty(depth int, tileSize int, worldW, worldH int) *TileMap {
 			for j := 0; j < 2; j++ {
 				rect0 := image.Rect(halfW*j, halfW*i, halfW*(j+1), halfW*(i+1))
 				child := &Tile{
-					bounds: rect0.Add(image.Point{topX, topY}),
-					z:      start.z + 1,
-					x:      start.x*2 + j,
-					y:      start.y*2 + i,
+					bounds:  rect0.Add(image.Point{topX, topY}),
+					z:       start.z + 1,
+					x:       start.x*2 + j,
+					y:       start.y*2 + i,
+					isEmpty: true,
 				}
+
 				build(child)
 				start.children[2*i+j] = child
 			}
@@ -80,8 +91,6 @@ func NewTileMapEmpty(depth int, tileSize int, worldW, worldH int) *TileMap {
 }
 
 func NewTileMapFromZip(zip *zip.Reader) (*TileMap, error) {
-	tic := time.Now()
-
 	n := 3*len(zip.File) + 1
 	maxDepth := 0
 	for n > 4 {
@@ -100,30 +109,21 @@ func NewTileMapFromZip(zip *zip.Reader) (*TileMap, error) {
 	if !ok {
 		return nil, fmt.Errorf("no root image")
 	}
-	fmt.Println("file to img done in", time.Since(tic).Seconds())
-	defer func() {
-		fmt.Println("done new tilemap from zip in", time.Since(tic).Seconds())
-	}()
 	tm := &TileMap{
 		tileSize: rootImg.Decoded().Bounds().Dx(),
+		maxDepth: maxDepth,
 	}
-	fmt.Println(tm.tileSize)
 	perfectSize := tm.tileSize << maxDepth
-	fmt.Println("perfect size", perfectSize)
 	// get resized layers
-	tm.maxDepth = maxDepth
 	var build func(start *Tile)
 	build = func(start *Tile) {
-		if start.bounds.Empty() {
-			panic("empty bounds")
-		}
+
 		name := fmt.Sprintf("%d/%d/%d.png", start.z, start.x, start.y)
 		img, ok := mem[name]
 		if !ok {
 			panic(fmt.Sprintf("file not found: %s", name))
 		}
 		start.encoded = img
-		// PrintMemUsage()
 		// no children on last level
 		if start.z == maxDepth {
 			return
@@ -135,10 +135,11 @@ func NewTileMapFromZip(zip *zip.Reader) (*TileMap, error) {
 			for j := 0; j < 2; j++ {
 				rect0 := image.Rect(halfW*j, halfW*i, halfW*(j+1), halfW*(i+1))
 				child := &Tile{
-					bounds: rect0.Add(image.Point{topX, topY}),
-					z:      start.z + 1,
-					x:      start.x*2 + j,
-					y:      start.y*2 + i,
+					bounds:  rect0.Add(image.Point{topX, topY}),
+					isEmpty: false,
+					z:       start.z + 1,
+					x:       start.x*2 + j,
+					y:       start.y*2 + i,
 				}
 				build(child)
 				start.children[2*i+j] = child
@@ -158,9 +159,7 @@ func NewTileMapFromZip(zip *zip.Reader) (*TileMap, error) {
 func (tm *TileMap) Clear() {
 	var dfs func(start *Tile)
 	dfs = func(start *Tile) {
-		if start.decoded != nil {
-			start.decoded.Clear()
-		}
+		start.Clear()
 		if start.z == tm.maxDepth {
 			return
 		}
@@ -170,6 +169,7 @@ func (tm *TileMap) Clear() {
 	}
 	dfs(tm.Root)
 }
+
 
 // PrintMemUsage outputs the current, total and OS memory being used. As well as the number
 // of garage collection cycles completed.

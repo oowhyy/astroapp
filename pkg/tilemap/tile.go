@@ -17,6 +17,8 @@ type Tile struct {
 	x        int
 	y        int
 	children []*Tile
+
+	isEmpty bool
 }
 
 func (t *Tile) Children() []*Tile {
@@ -35,9 +37,13 @@ func (t *Tile) Image() *ebiten.Image {
 }
 
 func (t *Tile) Clear() {
+	if t.isEmpty {
+		return
+	}
 	if t.decoded != nil {
 		t.decoded.Clear()
 	}
+	t.isEmpty = true
 }
 
 func (t *Tile) X() int {
