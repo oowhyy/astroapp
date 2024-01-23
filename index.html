@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<head>
+	<title>AstroApp</title>
+</head>
+<style type="text/css">
+	body {
+		margin: 0px;
+	}
+	canvas {
+		position: fixed;
+		/* top:0;
+		left:0; */
+		/* z-index: 1; */
+		margin: 0;
+		padding: 0;
+	}
+</style>
+<link rel="stylesheet" href="html/style.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500&family=Raleway:wght@500&display=swap" rel="stylesheet">
+<body>
+	<div id="play-pause" class="pause"></div>
+	<div id="add" class=""></div>
+	<div id="clearTrailDots"><span>.......</span></div>
+	<div id="speedControl"><span>1</span></div>
+	<div id="loading"></div>
+</body>
+
+<script src="html/wasm_exec.js"></script>
+<script>
+// Polyfill
+if (!WebAssembly.instantiateStreaming) {
+    WebAssembly.instantiateStreaming = async (resp, importObject) => {
+        const source = await (await resp).arrayBuffer();
+        return await WebAssembly.instantiate(source, importObject);
+    };
+}
+
+const go = new Go();
+WebAssembly.instantiateStreaming(fetch("html/astroapp.wasm"), go.importObject).then(result => {
+    go.run(result.instance);
+});
+</script>

@@ -1,0 +1,101 @@
+# Distance scale
+# 149 597 870 700 metres = 1 AU = 1 distance unit = 1 * PixelsPerAU pixels
+#
+# Radius scale
+# 12 756 km = 1 Earth diameter = 1 diameter unit
+# x diameter units = BaseImageSize * log2(x + 1) pixels
+# 
+# Mass scale
+# 5.974 * 10^24 kg = 1 Earth Mass = 1 mass unit
+
+# start x and y are relative to parent body
+
+# velocity vector is added to parent's velocity vector
+
+
+worldWidth: 10000
+worldHeight: 5625
+
+
+gConstant: 0.004 ## ???
+
+bodies:
+  - name: "sun"
+
+    mass: 330000
+    diameter: 109
+    x: 0
+    y: 0
+  - name: "mercury"
+    parent: "sun"
+
+    mass: 0.055
+    diameter: 0.37629
+    x: 0.387
+    y: 0
+    dx: 0
+    dy: 0.019748
+  - name: "venus"
+    parent: "sun"
+
+    mass: 0.815
+    diameter: 0.948887
+    x: 0.723
+    y: 0
+    dx: 0
+    dy: 0.014981
+  - name: "earth"
+    parent: "sun"
+
+    mass: 1
+    diameter: 1
+    x: 1
+    y: 0
+    dx: 0
+    dy: 0.012828
+  - name: "mars"
+    parent: "sun"
+
+    mass: 0.107
+    diameter: 0.5326
+    x: 1.524
+    y: 0
+    dx: 0
+    dy: 0.010407
+  - name: "jupiter"
+    parent: "sun"
+
+    mass: 318
+    diameter: 11.2
+    x: 5.203
+    y: 0
+    dx: 0
+    dy: 0.005665
+  - name: "saturn"
+    parent: "sun"
+
+    mass: 95.2
+    diameter: 9.449357
+    x: 9.537
+    y: 0
+    dx: 0
+    dy: 0.004248
+  - name: "uranus"
+    parent: "sun"
+
+    mass: 14.50
+    diameter: 4.007
+    x: 19.191
+    y: 0
+    dx: 0
+    dy: 0.003129
+  - name: "neptune"
+    parent: "sun"
+
+    mass: 17.4
+    diameter: 3.8827
+    x: 30.069
+    y: 0
+    dx: 0
+    dy: 0.003787
+
