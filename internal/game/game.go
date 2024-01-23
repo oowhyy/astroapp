@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"math/rand"
 
 	_ "embed"
 
@@ -63,7 +64,7 @@ type Game struct {
 	// for adding new body
 	addStage  AddStage
 	blueArrow *ebiten.Image
-	rock      *ebiten.Image
+	randomAssets []*ebiten.Image
 	newBody   *body.Body
 }
 
@@ -82,13 +83,15 @@ func (g *Game) Update() error {
 			cfg := &body.BodyConfig{
 				Name:     "rock",
 				Mass:     1,
-				Diameter: 40,
+				Diameter: 1,
 				X:        1000,
 				Y:        1000,
 				Dx:       0,
 				Dy:       0,
 			}
-			newb := body.NewBody(cfg, g.rock)
+			// select random image
+			r := rand.Intn(len(g.randomAssets))
+			newb := body.NewBody(cfg, g.randomAssets[r])
 			newb.Frozen = true
 			g.newBody = newb
 		case AddStageMove:

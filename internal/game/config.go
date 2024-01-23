@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -73,11 +74,17 @@ func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 		return nil, err
 	}
 	g.blueArrow = ebiten.NewImageFromImage(arrowPng)
-	rockPng, err := png.Decode(assets["rock.png"])
-	if err != nil {
-		return nil, err
+	g.randomAssets = make([]*ebiten.Image, 0)
+	for name, file := range assets {
+		if strings.HasPrefix(name, "moon") {
+			moonPng, err := png.Decode(file)
+			if err != nil {
+				return nil, err
+			}
+			g.randomAssets = append(g.randomAssets, ebiten.NewImageFromImage(moonPng))
+		}
 	}
-	g.rock = ebiten.NewImageFromImage(rockPng)
+
 
 	// center camera
 	screenW, screenH := g.UI.WindowSize()
