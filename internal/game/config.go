@@ -50,7 +50,7 @@ func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("FETCHED ASSETS")
+	fmt.Println("ASSETS LENGTH", len(assets))
 	// fetch background from dropbox
 	g.UI.SetLoadingMessage("fetching background")
 	zip, err := client.FetchZip("/bg_tiles.zip")
@@ -84,7 +84,6 @@ func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 			g.randomAssets = append(g.randomAssets, ebiten.NewImageFromImage(moonPng))
 		}
 	}
-
 
 	// center camera
 	screenW, screenH := g.UI.WindowSize()
