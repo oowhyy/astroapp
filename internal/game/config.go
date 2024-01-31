@@ -15,6 +15,7 @@ import (
 	"github.com/oowhyy/astroapp/pkg/dropbox"
 	"github.com/oowhyy/astroapp/pkg/tilemap"
 	"github.com/oowhyy/astroapp/pkg/webui"
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -33,13 +34,27 @@ type Config struct {
 // 	WorldHeight = 4000
 // )
 
-func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
+func Build(refreshToken string, appAuth string) (*Game, error) {
 	g := &Game{
 		UI:        webui.NewWebInterface(),
-		GConstant: c.GConstant,
 		simSpeed:  1,
-		worldSize: image.Pt(c.WorldWidth, c.WorldHeight),
 	}
+	g.UI.SetLoadingMessage("loading")
+	accessToken, err := dropbox.GetAccessToken(refreshToken, appAuth)
+	if err != nil {
+		panic(err)
+	}
+	g.UI.SetLoadingMessage("fetching config")
+	DBcfg := dropbox.NewConfig(accessToken)
+	client := dropbox.New(DBcfg)
+	config := &Config{}
+
+	err = readConfig(client, config)
+	if err != nil {
+		panic(err)
+	}
+	g.worldSize = image.Pt(config.WorldWidth, config.WorldHeight)
+	g.GConstant = config.GConstant
 	// timer := timeit.NewTimer(func(lapName string, timedDuration time.Duration) {
 	// 	fmt.Println(lapName, "in", timedDuration)
 	// })
@@ -66,7 +81,7 @@ func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 	// timer.Lap("background loaded")
 
 	g.UI.SetLoadingMessage("building trail layer")
-	g.trailLayer = tilemap.NewTileMapEmpty(tiles.Depth(), tiles.TileSize(), c.WorldWidth, c.WorldHeight)
+	g.trailLayer = tilemap.NewTileMapEmpty(tiles.Depth(), tiles.TileSize(), config.WorldWidth, config.WorldHeight)
 	// timer.Lap("empty layer built")
 	// game other assets
 	arrowPng, err := png.Decode(assets["blue_arrow.png"])
@@ -88,7 +103,7 @@ func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 	// center camera
 	screenW, screenH := g.UI.WindowSize()
 	g.Camera = camera.NewCamera(g.worldSize, image.Pt(int(screenW), int(screenH)))
-	g.Camera.Translate((float64(c.WorldWidth)-screenW)/2, (float64(c.WorldHeight)-screenH)/2)
+	g.Camera.Translate((float64(config.WorldWidth)-screenW)/2, (float64(config.WorldHeight)-screenH)/2)
 
 	// setup ui callbacks
 	g.showTrail = true
@@ -118,13 +133,13 @@ func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 	// bodies
 
 	// auto assign ids and fill config map
-	configMap := make(map[string]*body.BodyConfig, len(c.Bodies))
-	for i, b := range c.Bodies {
+	configMap := make(map[string]*body.BodyConfig, len(config.Bodies))
+	for i, b := range config.Bodies {
 		b.Id = i
 		configMap[b.Name] = b
 	}
 	// translate vectors relative to parent
-	for _, bConf := range c.Bodies {
+	for _, bConf := range config.Bodies {
 		if par, ok := configMap[bConf.Parent]; ok {
 			bConf.X += par.X
 			bConf.Y += par.Y
@@ -134,8 +149,8 @@ func FromConfig(c *Config, client *dropbox.Client) (*Game, error) {
 	}
 
 	// bodiesMap := make(map[int]*body.Body, len(c.Bodies))
-	bodies := make([]*body.Body, 0, len(c.Bodies))
-	for _, conf := range c.Bodies {
+	bodies := make([]*body.Body, 0, len(config.Bodies))
+	for _, conf := range config.Bodies {
 		imgName := conf.Name + ".png"
 		body, err := body.FromConfig(conf, assets[imgName])
 		if err != nil {
@@ -169,4 +184,17 @@ func fetchAssets(client *dropbox.Client) (map[string]io.Reader, error) {
 		file.Close()
 	}
 	return assets, nil
+}
+
+func readConfig(client *dropbox.Client, cfg *Config) error {
+	file, err := client.FetchFile("/config.yaml")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	err = yaml.NewDecoder(file).Decode(cfg)
+	if err != nil {
+		return err
+	}
+	return nil
 }
